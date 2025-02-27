@@ -1,0 +1,14 @@
+path: D:\Harsha\proj\VisionBoard\VisionBoard_Data  # dataset root dir
+train: train/images  # train images (relative to 'path')
+val: train/images    # val images (relative to 'path') - temporarily using train as val
+test: train/images    # test images (relative to 'path')
+
+nc: 1  # number of classes
+names: ['signboard']  # class names
+
+# Optional configurations
+single_cls: true  # single class mode
+rect: false      # rectangular training
+save: true       # save train/validation statistics
+save_period: 10  # save checkpoint every X epochs
+cache: false     # cache images for faster training

@@ -1,0 +1,84 @@
+# YOLOv8 Model Configuration
+model:
+  name: "yolov8n.pt"  # Base model to use (n, s, m, l, or x)
+  img_size: 640       # Image size for training and inference
+  epochs: 100         # Number of training epochs
+  batch_size: 16      # Batch size
+  workers: 4          # Number of worker threads
+  device: "cuda:0"    # Training device (cuda:0, cpu)
+  pretrained: true    # Use pretrained weights
+  resume: false       # Resume training from last checkpoint
+
+# Data Configuration
+data:
+  train: "VisionBoard_Data/train"  # Training data directory
+  val: "VisionBoard_Data/val"      # Validation data directory
+  test: "VisionBoard_Data/test"    # Test data directory
+  nc: 1                            # Number of classes
+  names: ["signboard"]             # Class names
+  format: "yolo"                   # Data format (yolo, coco)
+
+# Augmentation Configuration
+augmentation:
+  hsv_h: 0.015  # HSV-Hue augmentation
+  hsv_s: 0.7    # HSV-Saturation augmentation
+  hsv_v: 0.4    # HSV-Value augmentation
+  degrees: 0.0   # Rotation (+/- deg)
+  translate: 0.1 # Translation (+/- fraction)
+  scale: 0.5    # Scale (+/- gain)
+  shear: 0.0    # Shear (+/- deg)
+  flipud: 0.0   # Flip up-down (probability)
+  fliplr: 0.5   # Flip left-right (probability)
+  mosaic: 1.0   # Mosaic augmentation (probability)
+  mixup: 0.0    # Mixup augmentation (probability)
+  copy_paste: 0.0 # Copy-paste augmentation (probability)
+
+# Training Configuration
+training:
+  optimizer: "AdamW"     # Optimizer (SGD, Adam, AdamW)
+  lr0: 0.01             # Initial learning rate
+  lrf: 0.01             # Final learning rate ratio
+  momentum: 0.937       # SGD momentum/Adam beta1
+  weight_decay: 0.0005  # Weight decay
+  warmup_epochs: 3.0    # Warmup epochs
+  warmup_momentum: 0.8  # Warmup initial momentum
+  warmup_bias_lr: 0.1   # Warmup initial bias lr
+  box: 7.5             # Box loss gain
+  cls: 0.5             # Class loss gain
+  dfl: 1.5             # DFL loss gain
+  save_period: 10      # Save checkpoint every x epochs
+  cache: false         # Cache images for faster training
+
+# Inference Configuration
+inference:
+  conf_thres: 0.25     # Confidence threshold
+  iou_thres: 0.45      # NMS IoU threshold
+  max_det: 300         # Maximum detections per image
+  agnostic_nms: false  # Class-agnostic NMS
+  half: false          # Use FP16 half-precision inference
+  save_txt: true       # Save results to *.txt
+  save_conf: true      # Save confidences in --save-txt labels
+  save_crop: false     # Save cropped prediction boxes
+  hide_labels: false   # Hide labels
+  hide_conf: false     # Hide confidences
+  visualize: true      # Visualize model features
+  retina_masks: true   # Use high-resolution segmentation masks
+
+# Logging and Saving
+logging:
+  project: "VisionBoard"  # Project name
+  name: "train"          # Experiment name
+  exist_ok: false        # Existing project/name ok, do not increment
+  save_period: 10        # Save checkpoint every x epochs
+  artifact_path: "runs"  # Path to save artifacts
+  tensorboard: true      # Use tensorboard logging
+  wandb: false          # Use Weights & Biases logging
+
+# AWS S3 Configuration
+s3:
+  enabled: true
+  bucket: "visionboard-dizzy-hacker"
+  region: "ap-south-1"
+  model_path: "models"
+  data_path: "data"
+  sync_period: 10  # Sync with S3 every x epochs
