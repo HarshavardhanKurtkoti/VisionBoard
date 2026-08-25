@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startLiveClock();
   setupInteractivity();
   checkBackendHealth();
-  loadHitlScenario(0);
+  loadSignSample(0);
 });
 
 // ==================== NAVIGATION SWITCHER ====================
@@ -122,110 +122,31 @@ async function fetchMetricsFromAPI() {
   } catch (err) { }
 }
 
-// ==================== HUMAN-IN-THE-LOOP (HITL) 3-TEST SUITE ====================
-const HITL_SCENARIOS = [
-  {
-    id: 0,
-    title: 'Right Curve Warning',
-    image_url: '/scratch/uploaded_input.jpg',
-    expected_class: 'RIGHT_CURVE_WARNING',
-    prompt: 'Test Image 1 (Warning Sign) — Verify red triangular contour framing & RIGHT_CURVE_WARNING class label'
-  },
-  {
-    id: 1,
-    title: 'Speed Limit 50',
-    image_url: '/datasets/roadsigns/test/images/road103.png',
-    expected_class: 'SPEEDLIMIT',
-    prompt: 'Test Image 2 (Speed Limit) — Verify circular boundary framing & SPEEDLIMIT class label'
-  },
-  {
-    id: 2,
-    title: 'Stop Sign',
-    image_url: '/datasets/roadsigns/test/images/road120.png',
-    expected_class: 'STOP',
-    prompt: 'Test Image 3 (Stop Sign) — Verify octagonal stop boundary framing & STOP class label'
-  },
-  {
-    id: 3,
-    title: 'Highway Toll Board',
-    image_url: '/images.jpg',
-    expected_class: 'HIGHWAY_MULTI_SIGN',
-    prompt: 'Test Image 4 (Overhead Board) — Verify multi-region highway signboard segmentation'
-  }
+// ==================== SIGNBOARD SAMPLES & REAL-TIME PREDICTION ====================
+const SIGN_SAMPLES = [
+  { title: 'Right Curve Warning Sign', image_url: '/scratch/uploaded_input.jpg' },
+  { title: 'Speed Limit 50', image_url: '/datasets/roadsigns/test/images/road103.png' },
+  { title: 'Stop Sign (Octagonal)', image_url: '/datasets/roadsigns/test/images/road120.png' },
+  { title: 'Highway Multi-Sign Board', image_url: '/images.jpg' }
 ];
+let currentSampleIndex = 0;
 
-const hitlState = {
-  currentSlot: 0,
-  verifiedSlots: [false, false, false, true]
-};
-
-function loadHitlScenario(slotIndex) {
-  hitlState.currentSlot = slotIndex;
+function loadSignSample(index) {
+  currentSampleIndex = index % SIGN_SAMPLES.length;
   state.customImage = null;
+  const sample = SIGN_SAMPLES[currentSampleIndex];
 
-  // Clear previous bounding boxes immediately
+  // Immediately clear old bounding boxes so stale boxes never linger!
   const layer = document.getElementById('bounding-layer');
   if (layer) layer.innerHTML = '';
 
-  // Update scenario button styling
-  document.querySelectorAll('.hitl-scenario-btn').forEach((btn, idx) => {
-    if (idx === slotIndex) btn.classList.add('active');
-    else btn.classList.remove('active');
-  });
-
-  const scenario = HITL_SCENARIOS[slotIndex];
-  document.getElementById('main-image').src = scenario.image_url;
-  document.getElementById('hitl-prompt-text').textContent = scenario.prompt;
-
-  // Update approve button state
-  const approveBtn = document.getElementById('btn-hitl-approve');
-  if (hitlState.verifiedSlots[slotIndex]) {
-    approveBtn.classList.add('approved');
-    approveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Verified by Human-in-the-Loop ✓</span>`;
-  } else {
-    approveBtn.classList.remove('approved');
-    approveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Approve & Mark Verified (HITL)</span>`;
-  }
-
-  showToast(`Loaded ${scenario.title} — Running Inference...`);
-  runDetection(scenario.image_url);
+  document.getElementById('main-image').src = sample.image_url;
+  showToast(`Loaded ${sample.title} — Running Inference...`);
+  runDetection(sample.image_url);
 }
 
-function approveCurrentHitl() {
-  const slot = hitlState.currentSlot;
-  hitlState.verifiedSlots[slot] = true;
-
-  // Update badge
-  const badge = document.getElementById(`hitl-badge-${slot}`);
-  if (badge) {
-    badge.textContent = 'Verified ✓';
-  }
-  const btn = document.getElementById(`hitl-btn-${slot}`);
-  if (btn) btn.classList.add('verified');
-
-  const approveBtn = document.getElementById('btn-hitl-approve');
-  approveBtn.classList.add('approved');
-  approveBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Verified by Human-in-the-Loop ✓</span>`;
-
-  // Count verified
-  const verifiedCount = hitlState.verifiedSlots.slice(0, 3).filter(Boolean).length;
-  const statusBadge = document.getElementById('hitl-status-badge');
-  statusBadge.textContent = `HITL Validation: ${verifiedCount}/3 Verified`;
-  
-  if (verifiedCount >= 3) {
-    statusBadge.classList.add('verified');
-    statusBadge.textContent = `HITL Validation: 3/3 Approved ✓ (100% Accuracy)`;
-    showToast('🎉 All 3 Human-in-the-Loop Tests Approved! Model Verified Production-Ready.', 'success');
-  } else {
-    showToast(`Approved Test ${slot + 1} ✓ (${verifiedCount}/3 Completed)`);
-    // Auto advance to next unverified slot
-    setTimeout(() => {
-      const nextSlot = (slot + 1) % 3;
-      if (!hitlState.verifiedSlots[nextSlot]) {
-        loadHitlScenario(nextSlot);
-      }
-    }, 1000);
-  }
+function cycleNextSignSample() {
+  loadSignSample(currentSampleIndex + 1);
 }
 
 async function runDetection(overrideImagePath = null) {
