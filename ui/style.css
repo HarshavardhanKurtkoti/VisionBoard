@@ -464,11 +464,180 @@ body {
 .workspace-split { display: grid; grid-template-columns: 1fr 340px; gap: 16px; flex: 1; overflow: hidden; }
 .center-stage { display: flex; flex-direction: column; gap: 14px; height: 100%; overflow: hidden; }
 .canvas-card { flex: 1; display: flex; flex-direction: column; padding: 16px; overflow: hidden; }
-.canvas-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.canvas-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.canvas-title { display: flex; align-items: center; gap: 12px; }
 .canvas-title h2 { font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: #ffffff; }
+
+.hitl-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neon-emerald);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  padding: 3px 10px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+.hitl-pill.verified {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
 .canvas-tools { display: flex; align-items: center; gap: 8px; }
-.canvas-btn { width: 32px; height: 32px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-card); display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; }
-.canvas-btn svg { width: 16px; height: 16px; }
+.canvas-btn { height: 32px; padding: 0 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-card); display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease; }
+.canvas-btn svg { width: 15px; height: 15px; }
+.canvas-btn:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+.canvas-btn.btn-labeled { font-size: 12px; font-weight: 600; color: var(--text-main); }
+
+.hitl-scenarios-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(8, 14, 24, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.hitl-scenarios-bar::-webkit-scrollbar {
+  display: none;
+}
+.hitl-bar-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-right: 4px;
+}
+.hitl-scenario-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.hitl-step-num {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+}
+.hitl-step-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+.hitl-scenario-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.hitl-scenario-btn.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--neon-emerald);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+.hitl-scenario-btn.active .hitl-step-num {
+  background: var(--neon-emerald);
+  color: #031711;
+}
+.hitl-scenario-btn.verified .hitl-step-badge {
+  background: rgba(16, 185, 129, 0.25);
+  color: var(--neon-emerald);
+  font-weight: 700;
+}
+
+/* HITL Actions Footer */
+.hitl-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(8, 14, 24, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-top: 10px;
+}
+.hitl-info-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+.hitl-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--neon-emerald);
+  box-shadow: 0 0 8px var(--neon-emerald);
+  animation: dotPulse 1.5s infinite;
+}
+.hitl-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-hitl-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-card);
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-hitl-edit svg { width: 13px; height: 13px; }
+.btn-hitl-edit:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+
+.btn-hitl-approve {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--neon-emerald), #059669);
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 14px var(--neon-emerald-glow);
+  transition: all 0.2s ease;
+}
+.btn-hitl-approve svg { width: 14px; height: 14px; }
+.btn-hitl-approve:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.btn-hitl-approve.approved {
+  background: rgba(6, 182, 212, 0.2);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: none;
+}
 
 .viewport-box { flex: 1; background: #020509; border-radius: 14px; border: 1px solid var(--border-card); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .image-wrapper { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }

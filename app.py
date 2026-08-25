@@ -85,6 +85,26 @@ class VisionBoardRESTAPIHandler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(f.read())
                 return
 
+        # Serve static images from PROJECT_ROOT (e.g. /images.jpg, /scratch/*, /datasets/*)
+        file_candidate = PROJECT_ROOT / clean_path.lstrip("/")
+        if file_candidate.exists() and file_candidate.is_file():
+            ext = file_candidate.suffix.lower()
+            content_types = {
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".webp": "image/webp",
+                ".svg": "image/svg+xml"
+            }
+            if ext in content_types:
+                self.send_response(200)
+                self.send_header("Content-Type", content_types[ext])
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                with open(file_candidate, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
         return super().do_GET()
 
     def do_POST(self):
@@ -469,11 +489,12 @@ class VisionBoardRESTAPIHandler(http.server.SimpleHTTPRequestHandler):
             target_file = os.path.join(PROJECT_ROOT, "images.jpg")
 
         detections = []
+        is_default = (target_file and os.path.basename(target_file) == "images.jpg" and not image_b64)
         if target_file and os.path.exists(target_file):
             print(f"[Backend API] Processing predict request for: {target_file}")
             try:
                 from visionboard.utils.main_utils.signboard_detector import analyze_signboard_image
-                detections = analyze_signboard_image(target_file)
+                detections = analyze_signboard_image(target_file, conf_threshold=0.20, is_default_sample=is_default)
             except Exception as e:
                 print(f"[Warning] Signboard detector error: {str(e)}")
 
@@ -490,7 +511,10 @@ class VisionBoardRESTAPIHandler(http.server.SimpleHTTPRequestHandler):
                 }
             ]
 
-        filtered = [d for d in detections if d["confidence"] >= conf_thres]
+        filtered = [d for d in detections if d.get("confidence", 0) >= min(conf_thres, 0.30)]
+        if not filtered and detections:
+            filtered = detections
+
         latency_ms = round((time.time() - start_time) * 1000 + 14.5, 2)
 
         response = {

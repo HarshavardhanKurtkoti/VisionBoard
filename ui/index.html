@@ -177,23 +177,44 @@
             <div class="canvas-card glass-card">
               <div class="canvas-header">
                 <div class="canvas-title">
-                  <h2>Image Canvas</h2>
+                  <h2>Image Canvas & Live Inference</h2>
+                  <span class="hitl-pill" id="hitl-status-badge">HITL Validation: 0/3 Verified</span>
                 </div>
                 <div class="canvas-tools">
-                  <button class="canvas-btn" title="Switch Scene" onclick="cycleScene()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
-                  </button>
-                  <button class="canvas-btn" title="Upload Image" onclick="triggerUpload()">
+                  <button class="canvas-btn btn-labeled" title="Upload Custom Sign" onclick="triggerUpload()">
                     <input type="file" id="image-uploader" accept="image/*" style="display: none;" onchange="onCustomImage(event)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Upload Image</span>
                   </button>
                   <button class="canvas-btn" title="Fullscreen" onclick="toggleFullscreen()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="21 14 21 21 14 21"/><polyline points="3 10 3 3 10 3"/></svg>
                   </button>
-                  <button class="canvas-btn" title="Options">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                  </button>
                 </div>
+              </div>
+
+              <!-- HITL 3-Stage Scenario Switcher -->
+              <div class="hitl-scenarios-bar">
+                <span class="hitl-bar-title">🧪 3-Image HITL Test Suite:</span>
+                <button class="hitl-scenario-btn active" id="hitl-btn-0" onclick="loadHitlScenario(0)">
+                  <span class="hitl-step-num">1</span>
+                  <span>Right Curve Warning</span>
+                  <span class="hitl-step-badge" id="hitl-badge-0">Pending</span>
+                </button>
+                <button class="hitl-scenario-btn" id="hitl-btn-1" onclick="loadHitlScenario(1)">
+                  <span class="hitl-step-num">2</span>
+                  <span>Speed Limit 50</span>
+                  <span class="hitl-step-badge" id="hitl-badge-1">Pending</span>
+                </button>
+                <button class="hitl-scenario-btn" id="hitl-btn-2" onclick="loadHitlScenario(2)">
+                  <span class="hitl-step-num">3</span>
+                  <span>Stop Sign</span>
+                  <span class="hitl-step-badge" id="hitl-badge-2">Pending</span>
+                </button>
+                <button class="hitl-scenario-btn" id="hitl-btn-3" onclick="loadHitlScenario(3)">
+                  <span class="hitl-step-num">4</span>
+                  <span>Highway Toll Board</span>
+                  <span class="hitl-step-badge" id="hitl-badge-3">Verified ✓</span>
+                </button>
               </div>
 
               <!-- Viewport Canvas -->
@@ -202,6 +223,24 @@
                   <img id="main-image" src="" alt="Signboard Detection Scene" />
                   <div class="scan-laser" id="scan-laser"></div>
                   <div class="bounding-layer" id="bounding-layer"></div>
+                </div>
+              </div>
+
+              <!-- HITL Verification Actions Bar -->
+              <div class="hitl-actions-bar">
+                <div class="hitl-info-left">
+                  <span class="hitl-indicator-dot"></span>
+                  <span id="hitl-prompt-text">Test Image 1 Active — Verify detected bounding box and class label</span>
+                </div>
+                <div class="hitl-actions-right">
+                  <button class="btn-hitl-edit" onclick="editOCRText()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    <span>Edit Label / OCR</span>
+                  </button>
+                  <button class="btn-hitl-approve" id="btn-hitl-approve" onclick="approveCurrentHitl()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Approve & Mark Verified (HITL)</span>
+                  </button>
                 </div>
               </div>
             </div>
