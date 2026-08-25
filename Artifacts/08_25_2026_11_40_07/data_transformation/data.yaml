@@ -1,0 +1,7 @@
+path: C:\Local-Disk-D\Projects\VisionBoard\Artifacts\08_25_2026_11_40_07\data_transformation
+train: train/images
+val: valid/images
+test: test/images
+nc: 1
+names:
+- signboard

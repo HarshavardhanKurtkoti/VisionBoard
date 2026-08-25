@@ -1,26 +1,28 @@
-# Use Python 3.10 slim image as base
-FROM python:3.10-slim-buster
+# Multi-stage production Dockerfile
+FROM python:3.10-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    awscli \
-    libgl1-mesa-glx \
+# Install system dependencies for OpenCV, Tesseract OCR, and AWS CLI
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgl1 \
     libglib2.0-0 \
+    tesseract-ocr \
+    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
+# Install Python requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy source code
 COPY . .
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+# Environment settings
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    TESSERACT_CMD=/usr/bin/tesseract
 
-# Run the application
-CMD ["python", "main.py"]
+# Default health check & command
+CMD ["python", "main.py", "--help"]

@@ -1,0 +1,27 @@
+train:
+  total_images: 4
+  valid_images: 4
+  invalid_images: 0
+  total_labels: 4
+  valid_labels: 4
+  invalid_labels: 0
+  missing_labels: 0
+  status: true
+test:
+  total_images: 2
+  valid_images: 2
+  invalid_images: 0
+  total_labels: 2
+  valid_labels: 2
+  invalid_labels: 0
+  missing_labels: 0
+  status: true
+valid:
+  total_images: 2
+  valid_images: 2
+  invalid_images: 0
+  total_labels: 2
+  valid_labels: 2
+  invalid_labels: 0
+  missing_labels: 0
+  status: true

@@ -1,78 +1,70 @@
 import os
 from pathlib import Path
+from datetime import datetime
 
 """
 Defining common constant variables for training pipeline
 """
 PIPELINE_NAME: str = "VisionBoard"
 ARTIFACT_DIR: str = "Artifacts"
+TIMESTAMP: str = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 
-# Data related constants
-DATA_DIR: str = "data"
-TRAIN_DIR: str = "train"
-VALID_DIR: str = "valid"
-TEST_DIR: str = "test"
-IMAGES_DIR: str = "images"
-LABELS_DIR: str = "labels"
+# Base directories
+ROOT_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent
+DATA_DIR: str = "VisionBoard_Data"
+TRAIN_DIR_NAME: str = "train"
+VALID_DIR_NAME: str = "valid"
+TEST_DIR_NAME: str = "test"
+IMAGES_DIR_NAME: str = "images"
+LABELS_DIR_NAME: str = "labels"
 
-# Model related constants
-MODEL_DIR: str = "models"
+# Pretrained model constants
+MODEL_FILE_NAME: str = "best.pt"
+BASE_MODEL_NAME: str = "yolov8n.pt"
 SAVED_MODEL_DIR: str = "saved_models"
-MODEL_NAME: str = "yolov8m.pt"
-BEST_MODEL_NAME: str = "best.pt"
 
-# Training related constants
-CLASSES: list = ["SignBoard"]
+# Detection & Dataset constants
+CLASSES: list = ["signboard"]
 NUM_CLASSES: int = len(CLASSES)
 IMAGE_SIZE: int = 640
-BATCH_SIZE: int = 32
-NUM_WORKERS: int = 4
+BATCH_SIZE: int = 16
 EPOCHS: int = 50
 
 # Data ingestion constants
 DATA_INGESTION_DIR_NAME: str = "data_ingestion"
-DATA_INGESTION_PROCESSED_DIR: str = "processed"
-DATA_INGESTION_TRAIN_DIR: str = os.path.join(DATA_INGESTION_PROCESSED_DIR, TRAIN_DIR)
-DATA_INGESTION_VALID_DIR: str = os.path.join(DATA_INGESTION_PROCESSED_DIR, VALID_DIR)
-DATA_INGESTION_TEST_DIR: str = os.path.join(DATA_INGESTION_PROCESSED_DIR, TEST_DIR)
+DATA_INGESTION_RAW_DATA_DIR: str = "raw_data"
+DATA_INGESTION_INGESTED_DIR: str = "ingested"
+DATASET_DOWNLOAD_URL: str = ""
 
 # Data validation constants
 DATA_VALIDATION_DIR_NAME: str = "data_validation"
-DATA_VALIDATION_REPORT_FILE_NAME: str = "report.yaml"
-DATA_VALIDATION_REPORT_DIR: str = "validation_reports"
+DATA_VALIDATION_VALID_DIR: str = "valid"
+DATA_VALIDATION_INVALID_DIR: str = "invalid"
+DATA_VALIDATION_REPORT_FILE: str = "validation_report.yaml"
 
 # Data transformation constants
 DATA_TRANSFORMATION_DIR_NAME: str = "data_transformation"
-DATA_TRANSFORMATION_TRAIN_DIR: str = "transformed_train"
-DATA_TRANSFORMATION_VALID_DIR: str = "transformed_valid"
-DATA_TRANSFORMATION_TEST_DIR: str = "transformed_test"
+TRANSFORMED_TRAIN_DIR_NAME: str = "train"
+TRANSFORMED_VALID_DIR_NAME: str = "valid"
+TRANSFORMED_TEST_DIR_NAME: str = "test"
 
 # Model training constants
 MODEL_TRAINER_DIR_NAME: str = "model_trainer"
-MODEL_TRAINER_TRAINED_MODEL_DIR: str = "trained_model"
-MODEL_TRAINER_TRAINED_MODEL_NAME: str = "model.pt"
-MODEL_TRAINER_CONFIG_FILE_NAME: str = "config.yaml"
+TRAINED_MODEL_DIR: str = "trained_model"
 
 # Model evaluation constants
 MODEL_EVALUATION_DIR_NAME: str = "model_evaluation"
-MODEL_EVALUATION_REPORT_NAME: str = "evaluation_report.yaml"
-MODEL_EVALUATION_RESULTS_DIR: str = "evaluation_results"
+EVALUATION_REPORT_FILE: str = "evaluation_report.yaml"
+
+# Model prediction constants
+MODEL_PREDICTION_DIR_NAME: str = "model_prediction"
+VISUALIZATION_DIR_NAME: str = "visualizations"
 
 # S3 sync constants
 S3_BUCKET_NAME: str = "visionboard-data"
 S3_MODEL_DIR: str = "models"
 S3_DATA_DIR: str = "data"
 
-# Paths
-ROOT_DIR = Path(__file__).parent.parent.parent.parent
-
-ARTIFACTS_DIR = os.path.join(ROOT_DIR, ARTIFACT_DIR)
-DATA_INGESTION_ARTIFACT_DIR = os.path.join(ARTIFACTS_DIR, DATA_INGESTION_DIR_NAME)
-DATA_VALIDATION_ARTIFACT_DIR = os.path.join(ARTIFACTS_DIR, DATA_VALIDATION_DIR_NAME)
-DATA_TRANSFORMATION_ARTIFACT_DIR = os.path.join(ARTIFACTS_DIR, DATA_TRANSFORMATION_DIR_NAME)
-MODEL_TRAINER_ARTIFACT_DIR = os.path.join(ARTIFACTS_DIR, MODEL_TRAINER_DIR_NAME)
-MODEL_EVALUATION_ARTIFACT_DIR = os.path.join(ARTIFACTS_DIR, MODEL_EVALUATION_DIR_NAME)
-
-# YAML configs
-DATA_YAML_FILE = os.path.join(ROOT_DIR, "data.yaml")
-MODEL_CONFIG_FILE = os.path.join(ROOT_DIR, "model_config.yaml")
+# YAML config file paths
+DATA_YAML_FILE: str = str(ROOT_DIR / "config" / "data.yaml")
+MODEL_CONFIG_FILE: str = str(ROOT_DIR / "config" / "model_config.yaml")

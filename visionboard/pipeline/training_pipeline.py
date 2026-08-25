@@ -36,43 +36,39 @@ from visionboard.constant.training_pipeline import (
 )
 
 class TrainingPipeline:
-    def __init__(self):
-        self.training_pipeline_config = TrainingPipelineConfig()
+    """
+    Complete orchestration pipeline for training, validating, and evaluating VisionBoard models
+    """
+    
+    def __init__(self, config: Optional[TrainingPipelineConfig] = None):
+        """
+        Initialize TrainingPipeline with configuration
+        Args:
+            config: Optional TrainingPipelineConfig
+        """
+        self.training_pipeline_config = config or TrainingPipelineConfig()
         self.s3_sync = S3Sync()
 
     def start_data_ingestion(self) -> DataIngestionArtifact:
-        """
-        Start data ingestion component of training pipeline
-        Returns:
-            DataIngestionArtifact
-        """
+        """Start data ingestion component"""
         try:
-            logging.info("Starting data ingestion")
+            logging.info("Starting data ingestion stage")
             data_ingestion_config = DataIngestionConfig(
                 training_pipeline_config=self.training_pipeline_config
             )
             data_ingestion = DataIngestion(
                 data_ingestion_config=data_ingestion_config
             )
-            data_ingestion_artifact = data_ingestion.initiate_data_ingestion()
-            logging.info(f"Data ingestion completed. Artifact: {data_ingestion_artifact}")
-            return data_ingestion_artifact
-        
+            return data_ingestion.initiate_data_ingestion()
         except Exception as e:
             raise VisionBoardException(e, sys)
         
     def start_data_validation(
         self, data_ingestion_artifact: DataIngestionArtifact
     ) -> DataValidationArtifact:
-        """
-        Start data validation component of training pipeline
-        Args:
-            data_ingestion_artifact: Output from data ingestion stage
-        Returns:
-            DataValidationArtifact
-        """
+        """Start data validation component"""
         try:
-            logging.info("Starting data validation")
+            logging.info("Starting data validation stage")
             data_validation_config = DataValidationConfig(
                 training_pipeline_config=self.training_pipeline_config
             )
@@ -80,25 +76,16 @@ class TrainingPipeline:
                 data_ingestion_artifact=data_ingestion_artifact,
                 data_validation_config=data_validation_config
             )
-            data_validation_artifact = data_validation.initiate_data_validation()
-            logging.info(f"Data validation completed. Artifact: {data_validation_artifact}")
-            return data_validation_artifact
-        
+            return data_validation.initiate_data_validation()
         except Exception as e:
             raise VisionBoardException(e, sys)
         
     def start_data_transformation(
         self, data_validation_artifact: DataValidationArtifact
     ) -> DataTransformationArtifact:
-        """
-        Start data transformation component of training pipeline
-        Args:
-            data_validation_artifact: Output from data validation stage
-        Returns:
-            DataTransformationArtifact
-        """
+        """Start data transformation component"""
         try:
-            logging.info("Starting data transformation")
+            logging.info("Starting data transformation stage")
             data_transformation_config = DataTransformationConfig(
                 training_pipeline_config=self.training_pipeline_config
             )
@@ -106,25 +93,16 @@ class TrainingPipeline:
                 data_validation_artifact=data_validation_artifact,
                 data_transformation_config=data_transformation_config
             )
-            data_transformation_artifact = data_transformation.initiate_data_transformation()
-            logging.info(f"Data transformation completed. Artifact: {data_transformation_artifact}")
-            return data_transformation_artifact
-        
+            return data_transformation.initiate_data_transformation()
         except Exception as e:
             raise VisionBoardException(e, sys)
         
     def start_model_trainer(
         self, data_transformation_artifact: DataTransformationArtifact
     ) -> ModelTrainerArtifact:
-        """
-        Start model trainer component of training pipeline
-        Args:
-            data_transformation_artifact: Output from data transformation stage
-        Returns:
-            ModelTrainerArtifact
-        """
+        """Start model trainer component"""
         try:
-            logging.info("Starting model training")
+            logging.info("Starting model training stage")
             model_trainer_config = ModelTrainerConfig(
                 training_pipeline_config=self.training_pipeline_config
             )
@@ -132,10 +110,7 @@ class TrainingPipeline:
                 data_transformation_artifact=data_transformation_artifact,
                 model_trainer_config=model_trainer_config
             )
-            model_trainer_artifact = model_trainer.initiate_model_training()
-            logging.info(f"Model training completed. Artifact: {model_trainer_artifact}")
-            return model_trainer_artifact
-        
+            return model_trainer.initiate_model_trainer()
         except Exception as e:
             raise VisionBoardException(e, sys)
 
@@ -144,16 +119,9 @@ class TrainingPipeline:
         data_transformation_artifact: DataTransformationArtifact,
         model_trainer_artifact: ModelTrainerArtifact
     ) -> ModelEvaluationArtifact:
-        """
-        Start model evaluation component of training pipeline
-        Args:
-            data_transformation_artifact: Output from data transformation stage
-            model_trainer_artifact: Output from model trainer stage
-        Returns:
-            ModelEvaluationArtifact
-        """
+        """Start model evaluation component"""
         try:
-            logging.info("Starting model evaluation")
+            logging.info("Starting model evaluation stage")
             model_evaluation_config = ModelEvaluationConfig(
                 training_pipeline_config=self.training_pipeline_config
             )
@@ -162,24 +130,23 @@ class TrainingPipeline:
                 model_trainer_artifact=model_trainer_artifact,
                 model_evaluation_config=model_evaluation_config
             )
-            model_evaluation_artifact = model_evaluation.initiate_model_evaluation()
-            logging.info(f"Model evaluation completed. Artifact: {model_evaluation_artifact}")
-            return model_evaluation_artifact
-        
+            return model_evaluation.initiate_model_evaluation()
         except Exception as e:
             raise VisionBoardException(e, sys)
 
-    def sync_artifacts(self):
-        """Sync all artifacts to S3"""
+    def sync_artifacts(self) -> None:
+        """Sync training artifacts and models to S3 if available"""
         try:
+            if not self.s3_sync.is_available:
+                logging.info("S3 is not configured. Skipping artifact sync to cloud.")
+                return
+
             logging.info("Syncing artifacts to S3")
-            # Sync artifact directory
             self.s3_sync.sync_folder_to_s3(
                 folder_path=self.training_pipeline_config.artifact_dir,
                 s3_prefix=f"artifacts/{self.training_pipeline_config.timestamp}"
             )
             
-            # Sync saved model directory if it exists
             saved_model_path = os.path.join(SAVED_MODEL_DIR)
             if os.path.exists(saved_model_path):
                 self.s3_sync.sync_folder_to_s3(
@@ -187,56 +154,42 @@ class TrainingPipeline:
                     s3_prefix=S3_MODEL_DIR
                 )
             logging.info("Successfully synced artifacts to S3")
-        
         except Exception as e:
-            raise VisionBoardException(e, sys)
+            logging.warning(f"S3 artifact sync warning: {str(e)}")
 
-    def run_pipeline(self) -> Optional[ModelEvaluationArtifact]:
+    def run_pipeline(self) -> ModelEvaluationArtifact:
         """
-        Run the complete training pipeline
-        Returns:
-            Optional[ModelEvaluationArtifact]: Evaluation artifact if successful
+        Execute full training pipeline lifecycle
         """
         try:
-            logging.info("Starting training pipeline")
+            logging.info(f"{'='*30} Training Pipeline Started {'='*30}")
             
-            # Data ingestion
             data_ingestion_artifact = self.start_data_ingestion()
-            
-            # Data validation
-            data_validation_artifact = self.start_data_validation(
-                data_ingestion_artifact=data_ingestion_artifact
-            )
-            
-            # Data transformation
-            data_transformation_artifact = self.start_data_transformation(
-                data_validation_artifact=data_validation_artifact
-            )
-            
-            # Model training
-            model_trainer_artifact = self.start_model_trainer(
-                data_transformation_artifact=data_transformation_artifact
-            )
-            
-            # Model evaluation
+            data_validation_artifact = self.start_data_validation(data_ingestion_artifact)
+            data_transformation_artifact = self.start_data_transformation(data_validation_artifact)
+            model_trainer_artifact = self.start_model_trainer(data_transformation_artifact)
             model_evaluation_artifact = self.start_model_evaluation(
-                data_transformation_artifact=data_transformation_artifact,
-                model_trainer_artifact=model_trainer_artifact
+                data_transformation_artifact,
+                model_trainer_artifact
             )
             
-            # Sync artifacts to S3
             self.sync_artifacts()
             
-            logging.info("Training pipeline completed successfully")
+            logging.info(f"{'='*30} Training Pipeline Completed Successfully {'='*30}")
             return model_evaluation_artifact
-        
+            
         except Exception as e:
+            logging.error(f"Training pipeline execution failed: {str(e)}")
             raise VisionBoardException(e, sys)
+
+    def start(self) -> ModelEvaluationArtifact:
+        """Alias for run_pipeline"""
+        return self.run_pipeline()
 
 if __name__ == "__main__":
     try:
         pipeline = TrainingPipeline()
         pipeline.run_pipeline()
     except Exception as e:
-        logging.error(f"Pipeline failed: {str(e)}")
-        raise e
+        logging.error(f"Pipeline execution failed: {str(e)}")
+        raise

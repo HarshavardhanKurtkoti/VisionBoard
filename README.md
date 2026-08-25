@@ -1,42 +1,56 @@
-# VisionBoard
+# VisionBoard: Signboard Detection & OCR System
 
-A YOLOv8-based object detection system for signboard detection and analysis.
+VisionBoard is a production-ready computer vision and MLOps system built for automated signboard object detection (via YOLOv8) and text recognition (via Tesseract OCR).
 
-## Setup Instructions
+---
 
-1. **Clone the repository**
+## Key Features
+
+- **End-to-End MLOps Pipeline**:
+  1. **Data Ingestion**: Robust local and AWS S3 dataset synchronization.
+  2. **Data Validation**: Automated schema validation, corrupted image checks, and normalized coordinate integrity checking with YAML reporting.
+  3. **Data Transformation**: Image augmentations and YOLO dataset configuration generator.
+  4. **Model Training**: Multi-device training (CPU / CUDA GPU auto-detection) with YOLOv8 checkpointing and artifact tracking.
+  5. **Model Evaluation**: Comprehensive mAP@0.5, mAP@0.5:0.95, precision, and recall calculation with acceptance thresholds.
+  6. **Model Prediction & OCR**: Single-image and batch inference pipeline with bounding box annotation and Tesseract text recognition.
+- **Production-Grade Reliability**:
+  - Robust exception handling and dual console/file logging.
+  - Portable relative and environment-based path resolution (no hardcoded machine paths).
+  - Graceful fallbacks for AWS credentials and OCR binaries.
+- **Testing & CI/CD**:
+  - Full `pytest` unit and integration test suite with synthetic fixtures.
+  - Multi-stage Docker container support.
+  - GitHub Actions CI workflow for automated testing on push and pull request.
+
+---
+
+## Quick Start
+
+### 1. Installation
+
 ```bash
+# Clone repository
 git clone https://github.com/HarshavardhanKurtkoti/VisionBoard.git
 cd VisionBoard
-```
 
-2. **Create and activate virtual environment**
-```bash
-# Windows
+# Create virtual environment
 python -m venv venv
+# Windows:
 venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv venv
+# Linux/macOS:
 source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-3. **Install dependencies**
-```bash
-pip install -r Requirements.txt
-```
+### 2. Environment Configuration
 
-4. **Environment Setup**
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory (optional, defaults provided):
+
 ```env
-# AWS Configuration
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_DEFAULT_REGION=your_region
-S3_BUCKET_NAME=your_bucket_name
-
 # Model Configuration
-MODEL_PATH=path/to/model
+MODEL_PATH=yolov8n.pt
 CONFIDENCE_THRESHOLD=0.25
 IOU_THRESHOLD=0.45
 IMG_SIZE=640
@@ -45,53 +59,97 @@ IMG_SIZE=640
 DATA_DIR=VisionBoard_Data
 TRAIN_DIR=train
 TEST_DIR=test
+
+# Optional OCR / AWS Configuration
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+AWS_DEFAULT_REGION=us-east-1
+S3_BUCKET_NAME=your_bucket
 ```
 
-5. **Run the Application**
+### 3. Check System Diagnostics
 
-For training:
 ```bash
-python main.py train --config path/to/config.yaml
+python main.py check-env
 ```
 
-For prediction:
+### 4. Generate Sample Dataset
+
 ```bash
-python main.py predict input/path --config path/to/config.yaml
+python main.py create-dataset --count 10
 ```
+
+### 5. Run Training Pipeline
+
+```bash
+python main.py train --config config/model_config.yaml
+```
+
+### 6. Run Predictions (with optional OCR)
+
+```bash
+# Single image prediction with OCR
+python main.py predict VisionBoard_Data/test/images/signboard_test_001.jpg --ocr
+
+# Batch directory prediction
+python main.py predict VisionBoard_Data/test/images/ --ocr
+```
+
+---
 
 ## Project Structure
 
 ```
 VisionBoard/
-├── visionboard/              # Main package directory
-│   ├── components/          # Core components
-│   ├── entity/             # Data entities and configurations
-│   ├── exception/          # Custom exceptions
-│   ├── logging/           # Logging configuration
-│   ├── pipeline/          # Training and prediction pipelines
-│   └── utils/             # Utility functions
-├── VisionBoard_Data/       # Data directory
-├── notebooks/             # Jupyter notebooks
-├── tests/                # Test files
-├── .env                  # Environment variables
-├── Requirements.txt      # Project dependencies
-├── setup.py             # Package setup
-└── main.py              # Application entry point
+├── visionboard/
+│   ├── cloud/               # AWS S3 synchronization
+│   ├── components/          # Pipeline components (Ingestion, Validation, Transformation, Trainer, Evaluation, Predictor)
+│   ├── constant/            # Pipeline constants and defaults
+│   ├── entity/              # Typed config and artifact dataclasses
+│   ├── exception/           # Custom exception handling
+│   ├── logging/             # Dual console/file logger
+│   ├── ocr/                 # Tesseract OCR signboard text extraction
+│   ├── pipeline/            # Training and Prediction pipeline orchestrators
+│   └── utils/               # IO, YAML, array, and metric utilities
+├── config/                  # data.yaml & model_config.yaml
+├── tests/                   # Pytest unit and integration test suite
+├── create_sample_dataset.py # Synthetic dataset generator
+├── test_setup.py            # Environment & hardware diagnostics
+├── main.py                  # Production CLI entry point
+├── requirements.txt         # Project dependencies
+├── DOCKERFILE               # Production container image
+└── README.md
 ```
+
+---
+
+## Running Tests
+
+```bash
+# Run all unit and integration tests
+pytest -v tests/
+
+# Run with test coverage
+pytest -v --cov=visionboard tests/
+```
+
+---
 
 ## Docker Support
 
-Build and run using Docker:
 ```bash
 # Build image
 docker build -t visionboard .
 
-# Run training
-docker run -v $(pwd)/VisionBoard_Data:/app/VisionBoard_Data visionboard python main.py train
+# Run diagnostics
+docker run --rm visionboard python main.py check-env
 
-# Run prediction
-docker run -v $(pwd)/VisionBoard_Data:/app/VisionBoard_Data visionboard python main.py predict /app/VisionBoard_Data/test
+# Run training
+docker run --rm -v $(pwd)/VisionBoard_Data:/app/VisionBoard_Data visionboard python main.py train
 ```
+
+---
 
 ## License
 

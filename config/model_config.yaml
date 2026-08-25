@@ -2,17 +2,17 @@
 model:
   name: "yolov8n.pt"  # Base model to use (n, s, m, l, or x)
   img_size: 640       # Image size for training and inference
-  epochs: 100         # Number of training epochs
+  epochs: 50          # Number of training epochs
   batch_size: 16      # Batch size
   workers: 4          # Number of worker threads
-  device: "cuda:0"    # Training device (cuda:0, cpu)
+  device: "cpu"       # Training device (cuda, cpu)
   pretrained: true    # Use pretrained weights
   resume: false       # Resume training from last checkpoint
 
 # Data Configuration
 data:
   train: "VisionBoard_Data/train"  # Training data directory
-  val: "VisionBoard_Data/val"      # Validation data directory
+  val: "VisionBoard_Data/valid"    # Validation data directory
   test: "VisionBoard_Data/test"    # Test data directory
   nc: 1                            # Number of classes
   names: ["signboard"]             # Class names
@@ -61,24 +61,29 @@ inference:
   save_crop: false     # Save cropped prediction boxes
   hide_labels: false   # Hide labels
   hide_conf: false     # Hide confidences
-  visualize: true      # Visualize model features
-  retina_masks: true   # Use high-resolution segmentation masks
+  visualize: true      # Visualize model predictions
+
+# OCR Configuration
+ocr:
+  enabled: true
+  tesseract_cmd: ""    # Leave empty for automatic system detection
+  language: "eng"
 
 # Logging and Saving
 logging:
   project: "VisionBoard"  # Project name
   name: "train"          # Experiment name
-  exist_ok: false        # Existing project/name ok, do not increment
+  exist_ok: true         # Existing project/name ok
   save_period: 10        # Save checkpoint every x epochs
-  artifact_path: "runs"  # Path to save artifacts
-  tensorboard: true      # Use tensorboard logging
+  artifact_path: "Artifacts" # Path to save artifacts
+  tensorboard: false     # Use tensorboard logging
   wandb: false          # Use Weights & Biases logging
 
 # AWS S3 Configuration
 s3:
-  enabled: true
-  bucket: "visionboard-dizzy-hacker"
-  region: "ap-south-1"
+  enabled: false
+  bucket: "visionboard-data"
+  region: "us-east-1"
   model_path: "models"
   data_path: "data"
-  sync_period: 10  # Sync with S3 every x epochs
+  sync_period: 10

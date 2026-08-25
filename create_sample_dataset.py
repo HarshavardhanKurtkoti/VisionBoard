@@ -1,77 +1,93 @@
 import os
-import cv2
-import numpy as np
+import argparse
 from pathlib import Path
+from typing import Dict, Tuple, Optional
 
-def create_synthetic_signboard(size=(640, 640)):
-    """Create a synthetic signboard image with a white background and black text"""
-    # Create white background
-    image = np.ones((size[1], size[0], 3), dtype=np.uint8) * 255
-    
-    # Create a gray signboard
-    x1, y1 = size[0]//4, size[1]//4
-    x2, y2 = 3*size[0]//4, 3*size[1]//4
-    cv2.rectangle(image, (x1, y1), (x2, y2), (128, 128, 128), -1)
-    cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 0), 2)
-    
-    # Add some text
-    text = "SIGN"
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 2
-    thickness = 3
-    text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-    text_x = (x1 + x2 - text_size[0]) // 2
-    text_y = (y1 + y2 + text_size[1]) // 2
-    cv2.putText(image, text, (text_x, text_y), font, font_scale, (0, 0, 0), thickness)
-    
-    # Calculate YOLO format annotations (class_id, x_center, y_center, width, height)
-    x_center = (x1 + x2) / (2 * size[0])
-    y_center = (y1 + y2) / (2 * size[1])
-    width = (x2 - x1) / size[0]
-    height = (y2 - y1) / size[1]
-    
-    return image, f"0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}"
+import numpy as np
+from visionboard.utils.main_utils.image_utils import save_image, draw_box_and_label
 
-def create_dataset(base_path, num_images={"train": 5, "valid": 2, "test": 2}):
-    """Create a sample dataset with the specified number of images per split"""
-    base_path = Path(base_path)
-    print("\nCreating sample dataset...")
+def create_synthetic_signboard(
+    text: str = "STOP",
+    size: Tuple[int, int] = (640, 640),
+    bg_color: Tuple[int, int, int] = (240, 240, 240),
+    board_color: Tuple[int, int, int] = (0, 0, 200)
+) -> Tuple[np.ndarray, str]:
+    """
+    Create a synthetic image containing a colored signboard with text and return YOLO label
+    Args:
+        text: Text to write on the signboard
+        size: (width, height)
+        bg_color: Background color (BGR)
+        board_color: Signboard color (BGR)
+    Returns:
+        Tuple of (image array, YOLO format label string)
+    """
+    w, h = size
+    image = np.full((h, w, 3), bg_color, dtype=np.uint8)
     
-    for split, count in num_images.items():
-        print(f"\nGenerating {split} set:")
-        images_dir = base_path / split / "images"
-        labels_dir = base_path / split / "labels"
+    # Signboard coordinates
+    margin_x = int(w * 0.2)
+    margin_y = int(h * 0.25)
+    x1, y1 = margin_x, margin_y
+    x2, y2 = w - margin_x, h - margin_y
+    
+    # Draw signboard rectangle
+    image = draw_box_and_label(image, [x1, y1, x2, y2], label=text, color=board_color)
+    
+    # Calculate YOLO format annotations: class_id x_center y_center width height (normalized)
+    x_center = (x1 + x2) / (2.0 * w)
+    y_center = (y1 + y2) / (2.0 * h)
+    box_w = (x2 - x1) / float(w)
+    box_h = (y2 - y1) / float(h)
+    
+    label = f"0 {x_center:.6f} {y_center:.6f} {box_w:.6f} {box_h:.6f}"
+    return image, label
+
+def create_dataset(
+    base_path: str = "VisionBoard_Data",
+    counts: Optional[Dict[str, int]] = None
+) -> None:
+    """
+    Generate sample dataset with train, valid, and test splits
+    """
+    if counts is None:
+        counts = {"train": 6, "valid": 3, "test": 3}
         
-        # Create directories
+    sample_texts = ["SPEED 50", "STOP", "CAUTION", "EXIT", "PARKING", "WAY OUT", "ONE WAY", "NO ENTRY"]
+    base = Path(base_path)
+    print(f"\nGenerating sample VisionBoard dataset at: {base.resolve()}")
+    
+    for split, count in counts.items():
+        images_dir = base / split / "images"
+        labels_dir = base / split / "labels"
+        
         images_dir.mkdir(parents=True, exist_ok=True)
         labels_dir.mkdir(parents=True, exist_ok=True)
         
-        # Generate images and labels
         for i in range(count):
-            image_path = images_dir / f"signboard_{i+1:03d}.jpg"
-            label_path = labels_dir / f"signboard_{i+1:03d}.txt"
+            text = sample_texts[(i + len(split)) % len(sample_texts)]
+            image, label = create_synthetic_signboard(text=text)
             
-            # Create synthetic image and label
-            image, label = create_synthetic_signboard()
+            img_file = images_dir / f"signboard_{split}_{i+1:03d}.jpg"
+            lbl_file = labels_dir / f"signboard_{split}_{i+1:03d}.txt"
             
-            # Save image and label
-            cv2.imwrite(str(image_path), image)
-            with open(label_path, 'w') as f:
-                f.write(label)
-            
-            print(f"  Created sample {i+1}/{count}")
+            save_image(str(img_file), image)
+            with open(lbl_file, "w", encoding="utf-8") as f:
+                f.write(label + "\n")
+                
+        print(f"  Generated {count} samples for {split} split")
+        
+    print(f"\nDataset creation completed successfully at {base}!")
 
 if __name__ == "__main__":
-    # Create the sample dataset
-    create_dataset("VisionBoard_Data")
-    print("\nDataset creation complete! Structure:")
-    print("VisionBoard_Data/")
-    print("├── train/")
-    print("│   ├── images/")
-    print("│   └── labels/")
-    print("├── valid/")
-    print("│   ├── images/")
-    print("│   └── labels/")
-    print("└── test/")
-    print("    ├── images/")
-    print("    └── labels/")
+    parser = argparse.ArgumentParser(description="Create synthetic VisionBoard dataset for training/testing")
+    parser.add_argument("--output", default="VisionBoard_Data", help="Base directory for dataset")
+    parser.add_argument("--train-count", type=int, default=6, help="Number of train samples")
+    parser.add_argument("--valid-count", type=int, default=3, help="Number of valid samples")
+    parser.add_argument("--test-count", type=int, default=3, help="Number of test samples")
+    
+    args = parser.parse_args()
+    create_dataset(
+        base_path=args.output,
+        counts={"train": args.train_count, "valid": args.valid_count, "test": args.test_count}
+    )

@@ -2,7 +2,7 @@ import os
 import sys
 import yaml
 import json
-import dill
+import pickle
 import numpy as np
 from typing import Any, Dict, List, Optional
 from pathlib import Path
@@ -10,7 +10,7 @@ from pathlib import Path
 from visionboard.exception.exception import VisionBoardException
 from visionboard.logging.logger import logging
 
-def read_yaml_file(file_path: str) -> Dict:
+def read_yaml_file(file_path: str) -> Dict[str, Any]:
     """
     Read a YAML file and return its contents as a dictionary
     Args:
@@ -23,8 +23,8 @@ def read_yaml_file(file_path: str) -> Dict:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"YAML file not found at {file_path}")
             
-        with open(file_path, 'r') as f:
-            content = yaml.safe_load(f)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = yaml.safe_load(f) or {}
             logging.info(f"Successfully read YAML file: {file_path}")
             return content
             
@@ -32,7 +32,7 @@ def read_yaml_file(file_path: str) -> Dict:
         logging.error(f"Error reading YAML file {file_path}: {str(e)}")
         raise VisionBoardException(e, sys)
 
-def write_yaml_file(file_path: str, content: Dict, replace: bool = False) -> None:
+def write_yaml_file(file_path: str, content: Dict[str, Any], replace: bool = True) -> None:
     """
     Write content to a YAML file
     Args:
@@ -45,10 +45,10 @@ def write_yaml_file(file_path: str, content: Dict, replace: bool = False) -> Non
         if os.path.exists(file_path) and not replace:
             raise FileExistsError(f"File already exists at {file_path} and replace=False")
             
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
         
-        with open(file_path, 'w') as f:
-            yaml.dump(content, f, default_flow_style=False)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            yaml.dump(content, f, default_flow_style=False, sort_keys=False)
             logging.info(f"Successfully wrote YAML file: {file_path}")
             
     except Exception as e:
@@ -64,7 +64,7 @@ def save_numpy_array(file_path: str, array: np.ndarray) -> None:
     """
     try:
         logging.info(f"Saving numpy array to {file_path}")
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
         
         with open(file_path, 'wb') as f:
             np.save(f, array)
@@ -98,17 +98,17 @@ def load_numpy_array(file_path: str) -> np.ndarray:
 
 def save_object(file_path: str, obj: Any) -> None:
     """
-    Save Python object to file using dill
+    Save Python object to file using pickle
     Args:
         file_path: Path to save file
         obj: Python object to save
     """
     try:
         logging.info(f"Saving object to {file_path}")
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
         
         with open(file_path, 'wb') as f:
-            dill.dump(obj, f)
+            pickle.dump(obj, f)
             logging.info(f"Successfully saved object to {file_path}")
             
     except Exception as e:
@@ -117,7 +117,7 @@ def save_object(file_path: str, obj: Any) -> None:
 
 def load_object(file_path: str) -> Any:
     """
-    Load Python object from file using dill
+    Load Python object from file using pickle
     Args:
         file_path: Path to object file
     Returns:
@@ -129,7 +129,7 @@ def load_object(file_path: str) -> Any:
             raise FileNotFoundError(f"File not found at {file_path}")
             
         with open(file_path, 'rb') as f:
-            obj = dill.load(f)
+            obj = pickle.load(f)
             logging.info(f"Successfully loaded object from {file_path}")
             return obj
             
@@ -148,7 +148,6 @@ def create_directories(directories: List[str], exist_ok: bool = True) -> None:
         logging.info(f"Creating directories: {directories}")
         for directory in directories:
             os.makedirs(directory, exist_ok=exist_ok)
-            logging.info(f"Created directory: {directory}")
             
     except Exception as e:
         logging.error(f"Error creating directories: {str(e)}")
@@ -163,16 +162,16 @@ def get_size(path: str) -> str:
         str: Size in human readable format
     """
     try:
-        logging.info(f"Getting size of {path}")
         if not os.path.exists(path):
             raise FileNotFoundError(f"Path not found: {path}")
             
         size_bytes = os.path.getsize(path) if os.path.isfile(path) else get_dir_size(path)
         
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-            if size_bytes < 1024:
+            if size_bytes < 1024.0:
                 return f"{size_bytes:.2f} {unit}"
-            size_bytes /= 1024
+            size_bytes /= 1024.0
+        return f"{size_bytes:.2f} PB"
             
     except Exception as e:
         logging.error(f"Error getting size of {path}: {str(e)}")
@@ -188,10 +187,11 @@ def get_dir_size(path: str) -> int:
     """
     try:
         total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, _, filenames in os.walk(path):
             for filename in filenames:
                 file_path = os.path.join(dirpath, filename)
-                total_size += os.path.getsize(file_path)
+                if os.path.exists(file_path):
+                    total_size += os.path.getsize(file_path)
         return total_size
         
     except Exception as e:

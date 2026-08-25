@@ -1,84 +1,105 @@
 import os
-from dotenv import load_dotenv
-from ultralytics import YOLO
-import logging
+import sys
+import shutil
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Configure basic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+# Load environment variables
+load_dotenv()
 
 def test_setup():
-    """Test if the setup is working correctly"""
+    """Comprehensive environment and dependency diagnostics for VisionBoard"""
+    print("\n" + "="*50)
+    print("        VisionBoard Setup & Environment Diagnostics")
+    print("="*50 + "\n")
+    
+    # 1. Python runtime
+    print(f"[x] Python Version: {sys.version.split()[0]}")
+    base_dir = Path(__file__).parent.resolve()
+    print(f"[x] Project Root: {base_dir}")
+    
+    # 2. Key Package Checks
+    print("\n--- Checking Dependencies ---")
+    packages = [
+        ("numpy", "numpy"),
+        ("OpenCV", "cv2"),
+        ("PyYAML", "yaml"),
+        ("Pillow", "PIL"),
+        ("PyTorch", "torch"),
+        ("Ultralytics YOLO", "ultralytics"),
+        ("PyTesseract", "pytesseract"),
+        ("Boto3", "boto3"),
+        ("Pandas", "pandas"),
+        ("Scikit-Learn", "sklearn")
+    ]
+    
+    for name, module_name in packages:
+        try:
+            mod = __import__(module_name)
+            ver = getattr(mod, "__version__", "Installed")
+            print(f"  [OK] {name:<20}: {ver}")
+        except ImportError:
+            print(f"  [--] {name:<20}: Not Installed (Optional/Install via pip)")
+            
+    # 3. Hardware & Acceleration
+    print("\n--- Checking Hardware Acceleration ---")
     try:
-        print("\n=== Testing VisionBoard Setup ===\n")
-        
-        # Load environment variables
-        load_dotenv()
-        print(" Environment variables loaded")
-        
-        # Get base directory
-        base_dir = Path(__file__).parent
-        
-        # Test model loading
-        model_path = os.path.join(base_dir, os.getenv("MODEL_PATH"))
-        print(f"\nChecking model:")
-        print(f"- Model path: {model_path}")
-        if os.path.exists(model_path):
-            model = YOLO(model_path)
-            print(" Model loaded successfully")
+        import torch
+        cuda_avail = torch.cuda.is_available()
+        print(f"  CUDA Available: {cuda_avail}")
+        if cuda_avail:
+            print(f"  GPU Device: {torch.cuda.get_device_name(0)}")
+            print(f"  Device Count: {torch.cuda.device_count()}")
         else:
-            print(" Model file not found!")
-            print(f"  Checking alternative path: {os.path.join(base_dir, 'visionboard/models/yolov8m.pt')}")
-            alt_path = os.path.join(base_dir, 'visionboard/models/yolov8m.pt')
-            if os.path.exists(alt_path):
-                model = YOLO(alt_path)
-                print(" Model loaded successfully from alternative path")
-            else:
-                print(" Model not found in alternative path either!")
-        
-        # Test data paths
-        data_dir = os.path.join(base_dir, os.getenv("DATA_DIR"))
-        train_dir = os.path.join(data_dir, os.getenv("TRAIN_DIR"))
-        test_dir = os.path.join(data_dir, os.getenv("TEST_DIR"))
-        
-        print(f"\nChecking directories:")
-        print(f"- Data directory: {data_dir}")
-        print(f"- Train directory: {train_dir}")
-        print(f"- Test directory: {test_dir}")
-        
-        # Check if directories exist and their contents
-        if os.path.exists(data_dir):
-            print(" Data directory exists")
-            # Check train directory
-            if os.path.exists(train_dir):
-                train_images = os.path.join(train_dir, "images")
-                train_labels = os.path.join(train_dir, "labels")
-                print(f"  Train directory exists")
-                print(f"    - Images dir: {'' if os.path.exists(train_images) else ''}")
-                print(f"    - Labels dir: {'' if os.path.exists(train_labels) else ''}")
-            else:
-                print(" Train directory not found!")
-                
-            # Check test directory
-            if os.path.exists(test_dir):
-                test_images = os.path.join(test_dir, "images")
-                test_labels = os.path.join(test_dir, "labels")
-                print(f"  Test directory exists")
-                print(f"    - Images dir: {'' if os.path.exists(test_images) else ''}")
-                print(f"    - Labels dir: {'' if os.path.exists(test_labels) else ''}")
-            else:
-                print(" Test directory not found!")
-        else:
-            print(" Data directory not found!")
-        
-        print("\n=== Setup Check Complete ===")
-        
+            print(f"  Running on CPU with {os.cpu_count()} logical cores")
     except Exception as e:
-        print(f"\n Error during setup test: {str(e)}")
-        raise
+        print(f"  PyTorch check skipped: {e}")
+        
+    # 4. OCR Engine
+    print("\n--- Checking OCR Engine (Tesseract) ---")
+    try:
+        from visionboard.ocr.text_recognition import SignboardTextReader
+        reader = SignboardTextReader()
+        if reader.tesseract_available:
+            print("  [OK] Tesseract OCR is available and ready.")
+        else:
+            print("  [--] Tesseract OCR binary not detected (OCR text extraction will be skipped).")
+    except Exception as e:
+        print(f"  OCR check error: {e}")
+        
+    # 5. Pretrained Weights
+    print("\n--- Checking Model Weights ---")
+    model_paths = [
+        "yolov8n.pt",
+        "visionboard/models/yolov8m.pt"
+    ]
+    for p in model_paths:
+        full_p = base_dir / p
+        if full_p.exists():
+            size_mb = full_p.stat().st_size / (1024 * 1024)
+            print(f"  [OK] Found model weight: {p} ({size_mb:.2f} MB)")
+        else:
+            print(f"  [--] Model weight not found: {p}")
+            
+    # 6. Data Directory Structure
+    print("\n--- Checking Data Directory Structure ---")
+    data_dir = base_dir / "VisionBoard_Data"
+    if data_dir.exists():
+        print(f"  [OK] Data directory found: {data_dir}")
+        for split in ["train", "valid", "test"]:
+            split_dir = data_dir / split
+            if split_dir.exists():
+                imgs = len(list((split_dir / "images").glob("*.*"))) if (split_dir / "images").exists() else 0
+                lbls = len(list((split_dir / "labels").glob("*.txt"))) if (split_dir / "labels").exists() else 0
+                print(f"       - {split:<6}: {imgs} images, {lbls} labels")
+            else:
+                print(f"       - {split:<6}: missing")
+    else:
+        print(f"  [--] Data directory {data_dir} does not exist yet (create with 'python main.py create-dataset')")
+        
+    print("\n" + "="*50)
+    print("Diagnostics check complete.")
+    print("="*50 + "\n")
 
 if __name__ == "__main__":
     test_setup()

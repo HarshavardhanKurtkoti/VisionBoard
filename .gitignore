@@ -172,3 +172,4 @@ cython_debug/
 
 # Custom ignores
 VisionBoard_Data
+docs/
