@@ -141,6 +141,11 @@ def main():
         # 4. Check Environment mode
         subparsers.add_parser("check-env", help="Run system diagnostics and verify dependencies")
         
+        # 5. UI Mode
+        ui_parser = subparsers.add_parser("ui", help="Launch interactive VisionBoard Web UI Studio")
+        ui_parser.add_argument("--port", type=int, default=8080, help="Port to serve on (default: 8080)")
+        ui_parser.add_argument("--no-browser", action="store_true", help="Do not automatically open browser")
+        
         args = parser.parse_args()
         
         if args.mode == "train":
@@ -162,15 +167,18 @@ def main():
             )
             
         elif args.mode == "check-env":
-            from test_setup import test_setup
-            test_setup()
+            from test_setup import run_diagnostics
+            run_diagnostics()
+            
+        elif args.mode == "ui":
+            from app import run_server
+            run_server(port=args.port, auto_open=not args.no_browser)
             
         else:
             parser.print_help()
             
     except Exception as e:
-        logging.error(f"Error in main: {str(e)}")
-        print(f"\n[ERROR] {str(e)}")
+        print(f"\n[ERROR] Application execution failed: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":

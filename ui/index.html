@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionBoard AI — Intelligent Signboard Detection & OCR</title>
+  <meta name="description" content="Production-ready YOLOv8 object detection and Tesseract OCR studio for signboards, road signs, and retail intelligence.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+  <!-- Glow Backdrop Elements -->
+  <div class="ambient-glow orb-left"></div>
+  <div class="ambient-glow orb-right"></div>
+
+  <div class="app-layout">
+    
+    <!-- ==================== LEFT SIDEBAR ==================== -->
+    <aside class="sidebar glass-card">
+      <div class="sidebar-top">
+        <div class="brand-logo">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+              <line x1="4" y1="22" x2="4" y2="15"/>
+            </svg>
+          </div>
+          <span class="brand-title">VisionBoard</span>
+          <button class="sidebar-collapse-btn" title="Toggle Sidebar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" id="nav-dashboard" onclick="switchNav('dashboard', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            <span>Dashboard</span>
+          </a>
+
+          <div class="nav-group">
+            <a href="#" class="nav-item" id="nav-projects" onclick="switchNav('projects', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+              <span>Projects</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <a href="#" class="nav-item" id="nav-models" onclick="switchNav('models', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+              <span>Models</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+          </div>
+
+          <a href="#" class="nav-item" id="nav-data" onclick="switchNav('data', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+            <span>Data</span>
+          </a>
+
+          <div class="nav-group">
+            <a href="#" class="nav-item" id="nav-settings" onclick="switchNav('settings', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Settings</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Pipeline Stages Status -->
+      <div class="sidebar-pipeline">
+        <div class="pipeline-card" id="pipe-ingest">
+          <div class="pipe-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/></svg>
+          </div>
+          <div class="pipe-info">
+            <div class="pipe-title">Data Ingestion</div>
+            <div class="pipe-state state-active">✓ Active</div>
+          </div>
+        </div>
+
+        <div class="pipeline-card" id="pipe-trainer">
+          <div class="pipe-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+          </div>
+          <div class="pipe-info">
+            <div class="pipe-title">Model Trainer</div>
+            <div class="pipe-progress-bar">
+              <div class="progress-fill" style="width: 72%;"></div>
+            </div>
+            <div class="pipe-state state-training">
+              <span class="dot-blink"></span>
+              <span>Training - 72%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pipeline-card" id="pipe-eval">
+          <div class="pipe-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="pipe-info">
+            <div class="pipe-title">Evaluator</div>
+            <div class="pipe-state state-queued">● Queued</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <div class="main-content">
+      
+      <!-- Top Control Bar -->
+      <header class="top-bar glass-card">
+        <div class="top-bar-left">
+          <button class="btn-run-detection" id="btn-run" onclick="runDetection()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Run Detection</span>
+          </button>
+
+          <div class="model-picker-wrapper">
+            <span class="control-label">Model:</span>
+            <div class="custom-select">
+              <select id="model-select" onchange="changeModel()">
+                <option value="yolov8x" selected>YOLOv8x</option>
+                <option value="yolov8m">YOLOv8m</option>
+                <option value="yolov8s">YOLOv8s</option>
+                <option value="yolov8n">YOLOv8n</option>
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <div class="metric-pill">
+            <span class="metric-label">Processing:</span>
+            <span class="metric-val" id="top-processing">145ms</span>
+          </div>
+
+          <div class="metric-pill">
+            <span class="metric-label">Stream:</span>
+            <span class="metric-val highlight-cyan" id="top-stream">32fps</span>
+          </div>
+        </div>
+
+        <div class="top-bar-right">
+          <button class="action-btn" title="Search" onclick="showToast('Search indexing ready')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+          
+          <button class="action-btn" title="Notifications" onclick="showToast('No new notifications')">
+            <div class="badge-dot"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          </button>
+
+          <div class="user-profile">
+            <div class="avatar-ring">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Alex R." class="avatar-img" />
+            </div>
+            <span class="user-name">Alex R.</span>
+            <svg class="chevron-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+      </header>
+
+      <!-- Center Workspace & Right Panel -->
+      <div class="workspace-split">
+        
+        <!-- Left / Center: Image Canvas & Telemetry Deck -->
+        <div class="center-stage">
+          <div class="canvas-card glass-card">
+            
+            <div class="canvas-header">
+              <div class="canvas-title">
+                <h2>Image Canvas</h2>
+              </div>
+              <div class="canvas-tools">
+                <button class="canvas-btn" title="Switch Scene" onclick="cycleScene()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+                </button>
+                <button class="canvas-btn" title="Upload Image" onclick="triggerUpload()">
+                  <input type="file" id="image-uploader" accept="image/*" style="display: none;" onchange="onCustomImage(event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </button>
+                <button class="canvas-btn" title="Fullscreen" onclick="toggleFullscreen()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="21 14 21 21 14 21"/><polyline points="3 10 3 3 10 3"/></svg>
+                </button>
+                <button class="canvas-btn" title="Options">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Visual Viewport Canvas -->
+            <div class="viewport-box" id="viewport-box">
+              <div class="image-wrapper" id="image-wrapper">
+                <img id="main-image" src="" alt="Signboard Detection Scene" />
+                
+                <!-- Laser Scanning Effect -->
+                <div class="scan-laser" id="scan-laser"></div>
+
+                <!-- Bounding Box Annotation Layer -->
+                <div class="bounding-layer" id="bounding-layer"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Telemetry Metric Cards -->
+          <div class="telemetry-bar">
+            
+            <div class="tele-card glass-card">
+              <div class="tele-icon icon-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+              </div>
+              <div class="tele-text">
+                <span class="tele-label">Model</span>
+                <span class="tele-val" id="tele-model-name">YOLOv8x</span>
+              </div>
+            </div>
+
+            <div class="tele-card glass-card">
+              <div class="tele-icon icon-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+              </div>
+              <div class="tele-text">
+                <span class="tele-label">GPU</span>
+                <span class="tele-val">72%</span>
+              </div>
+            </div>
+
+            <div class="tele-card glass-card">
+              <div class="tele-icon icon-emerald">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </div>
+              <div class="tele-text">
+                <span class="tele-label">Detections</span>
+                <span class="tele-val" id="tele-detections-count">145</span>
+              </div>
+            </div>
+
+            <div class="tele-card glass-card">
+              <div class="tele-icon icon-teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <div class="tele-text">
+                <span class="tele-label">Accuracy</span>
+                <span class="tele-val">94.1%</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Panel: Real-Time Detection & OCR Content -->
+        <aside class="right-panel glass-card">
+          
+          <div class="panel-header">
+            <h3>Real-Time Detection</h3>
+            <button class="panel-menu-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+          </div>
+
+          <!-- Latest Detections Stream -->
+          <div class="section-block">
+            <div class="block-title">Latest Detections</div>
+            <div class="detection-stream-list" id="detection-stream-list">
+              <div class="stream-item active">
+                <span class="stream-text">40 MPH (Speed Limit) | 5.5%</span>
+              </div>
+              <div class="stream-item">
+                <span class="stream-text">ARSENTED | 40 MPH</span>
+              </div>
+              <div class="stream-item highlight-green">
+                <span class="stream-text">SPEED_LIMIT · 40 MPH</span>
+              </div>
+              <div class="stream-item highlight-green">
+                <span class="stream-text">PED_CROSSING · TURN_LEFT</span>
+              </div>
+              <div class="stream-item highlight-green">
+                <span class="stream-text">TURN HANSING</span>
+              </div>
+              <div class="stream-item highlight-green">
+                <span class="stream-text">TURN_LEFT</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- OCR Content Card -->
+          <div class="section-block">
+            <div class="ocr-box-container">
+              <div class="ocr-box-header">
+                <span class="ocr-box-title">OCR Content</span>
+                <button class="ocr-edit-btn" title="Edit OCR" onclick="editOCRText()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                </button>
+              </div>
+              <div class="ocr-box-body" id="ocr-extracted-text">
+                40 MPH (Speed Limit)
+              </div>
+            </div>
+          </div>
+
+          <!-- Confidence Radial Meter Gauge -->
+          <div class="section-block">
+            <div class="block-title">Confidence</div>
+            <div class="meter-gauges-row">
+              <div class="semi-gauge-wrapper">
+                <svg class="semi-gauge" viewBox="0 0 100 55">
+                  <path class="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" stroke-linecap="round"/>
+                  <path class="gauge-fill" id="gauge-arc-1" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#emeraldGradient)" stroke-width="7" stroke-dasharray="126" stroke-dashoffset="18" stroke-linecap="round"/>
+                  <defs>
+                    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#06b6d4" />
+                      <stop offset="100%" stop-color="#10b981" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="needle" id="gauge-needle"></div>
+              </div>
+
+              <div class="gauge-stats-right">
+                <span class="gauge-val-big" id="ocr-accuracy-pct">96.5%</span>
+                <span class="gauge-sub">Accurate</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sign Class Distribution Breakdown -->
+          <div class="section-block">
+            <div class="class-breakdown">
+              
+              <div class="class-row">
+                <div class="class-row-header">
+                  <div class="class-name">
+                    <span class="class-dot dot-green"></span>
+                    <span>Speed Limit</span>
+                  </div>
+                  <span class="class-pct">58%</span>
+                </div>
+                <div class="class-bar-track">
+                  <div class="class-bar-fill bar-green" style="width: 58%;"></div>
+                </div>
+              </div>
+
+              <div class="class-row">
+                <div class="class-row-header">
+                  <div class="class-name">
+                    <span class="class-dot dot-amber"></span>
+                    <span>Warning</span>
+                  </div>
+                  <span class="class-pct">24%</span>
+                </div>
+                <div class="class-bar-track">
+                  <div class="class-bar-fill bar-amber" style="width: 24%;"></div>
+                </div>
+              </div>
+
+              <div class="class-row">
+                <div class="class-row-header">
+                  <div class="class-name">
+                    <span class="class-dot dot-cyan"></span>
+                    <span>Information</span>
+                  </div>
+                  <span class="class-pct">18%</span>
+                </div>
+                <div class="class-bar-track">
+                  <div class="class-bar-fill bar-cyan" style="width: 18%;"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Timestamp Footer -->
+          <div class="panel-footer">
+            <div class="timestamp-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="ts-label">Timestamp</span>
+              <span class="ts-val" id="live-timestamp">14:32:11</span>
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+
+    <!-- Global Toast Notification -->
+    <div class="toast" id="toast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-msg" id="toast-msg">Detection Complete</div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
