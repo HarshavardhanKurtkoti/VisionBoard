@@ -63,27 +63,28 @@ class VisionBoardRESTAPIHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith("/api/"):
             return self.handle_api_get()
         
-        # Serve static UI files from /ui folder if requesting root or ui assets
+        # Serve static UI files from /ui folder
         clean_path = self.path.split("?")[0]
-        if clean_path in ["/", "/index.html", "/style.css", "/app.js"]:
-            target_path = UI_DIR / (clean_path.lstrip("/") or "index.html")
-            if target_path.exists():
-                ext = target_path.suffix
-                content_types = {
-                    ".html": "text/html",
-                    ".css": "text/css",
-                    ".js": "application/javascript",
-                    ".png": "image/png",
-                    ".jpg": "image/jpeg",
-                    ".jpeg": "image/jpeg"
-                }
-                self.send_response(200)
-                self.send_header("Content-Type", content_types.get(ext, "application/octet-stream"))
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                with open(target_path, "rb") as f:
-                    self.wfile.write(f.read())
-                return
+        ui_file = UI_DIR / (clean_path.lstrip("/") or "index.html")
+        if ui_file.exists() and ui_file.is_file():
+            ext = ui_file.suffix.lower()
+            content_types = {
+                ".html": "text/html; charset=utf-8",
+                ".css": "text/css; charset=utf-8",
+                ".js": "application/javascript; charset=utf-8",
+                ".svg": "image/svg+xml",
+                ".png": "image/png",
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".ico": "image/x-icon"
+            }
+            self.send_response(200)
+            self.send_header("Content-Type", content_types.get(ext, "application/octet-stream"))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            with open(ui_file, "rb") as f:
+                self.wfile.write(f.read())
+            return
 
         # Serve static images from PROJECT_ROOT (e.g. /images.jpg, /scratch/*, /datasets/*)
         file_candidate = PROJECT_ROOT / clean_path.lstrip("/")

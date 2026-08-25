@@ -125,28 +125,27 @@ def analyze_signboard_image(image_path_or_bytes, conf_threshold: float = 0.20, i
                 }
             ]
 
-        detections = []
+        candidates = []
 
-        # 2. Run Geometric Shape & Warning Sign Analyzer first for crisp signs
-        geo_dets = _detect_geometric_signs(cv_img, img_w, img_h)
-        for gd in geo_dets:
-            detections.append(gd)
-
-        # 3. Run fine-tuned YOLOv8 model
+        # 2. Run fine-tuned YOLOv8 model
         model = _get_model()
         if model is not None:
             yolo_dets = _predict_with_yolo(model, cv_img, img_w, img_h, conf_threshold)
-            for yd in yolo_dets:
-                # If YOLO has high confidence (e.g. >= 0.70) or no overlap with geometric box, add it
-                if yd["confidence"] >= 0.70 or not _has_high_iou(yd, detections, iou_thresh=0.40):
-                    detections.append(yd)
+            if yolo_dets:
+                candidates.extend(yolo_dets)
+
+        # 3. Run Geometric Shape & Warning Sign Analyzer
+        geo_dets = _detect_geometric_signs(cv_img, img_w, img_h)
+        if geo_dets:
+            candidates.extend(geo_dets)
 
         # 4. If still no detections, run OCR & fallback segmentation
-        if not detections:
+        if not candidates:
             print("[SignboardDetector] Running fallback contour & color segmentation")
-            detections = _predict_with_heuristic(cv_img, pil_img, img_w, img_h)
+            candidates = _predict_with_heuristic(cv_img, pil_img, img_w, img_h)
 
-        detections.sort(key=lambda d: d["confidence"], reverse=True)
+        # 5. Apply Non-Maximum Suppression (NMS) to keep only the highest-confidence bounding box per sign
+        detections = _apply_nms(candidates, iou_thresh=0.30)
         return detections
 
     except Exception as e:
@@ -359,26 +358,52 @@ def _extract_ocr_roi(roi_bgr) -> str:
         return ""
 
 
+def _calculate_iou(b1: List[float], b2: List[float]) -> float:
+    """Calculate Intersection over Union (IoU) between two bounding boxes [xc, yc, w, h]."""
+    x1_1, y1_1, x2_1, y2_1 = b1[0] - b1[2]/2, b1[1] - b1[3]/2, b1[0] + b1[2]/2, b1[1] + b1[3]/2
+    x1_2, y1_2, x2_2, y2_2 = b2[0] - b2[2]/2, b2[1] - b2[3]/2, b2[0] + b2[2]/2, b2[1] + b2[3]/2
+    
+    xi1 = max(x1_1, x1_2)
+    yi1 = max(y1_1, y1_2)
+    xi2 = min(x2_1, x2_2)
+    yi2 = min(y2_1, y2_2)
+    
+    inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
+    area1 = max(0, x2_1 - x1_1) * max(0, y2_1 - y1_1)
+    area2 = max(0, x2_2 - x1_2) * max(0, y2_2 - y1_2)
+    union_area = area1 + area2 - inter_area
+    
+    if union_area <= 0:
+        return 0.0
+    return inter_area / union_area
+
+
+def _apply_nms(detections: List[Dict[str, Any]], iou_thresh: float = 0.30) -> List[Dict[str, Any]]:
+    """Apply standard NMS to remove redundant overlapping bounding boxes."""
+    if not detections:
+        return []
+    
+    # Sort by confidence descending
+    sorted_dets = sorted(detections, key=lambda d: d.get("confidence", 0), reverse=True)
+    kept = []
+    
+    for d in sorted_dets:
+        overlap = False
+        for k in kept:
+            if _calculate_iou(d["box"], k["box"]) > iou_thresh:
+                overlap = True
+                break
+        if not overlap:
+            kept.append(d)
+            
+    return kept
+
+
 def _has_high_iou(box_dict, existing_list, iou_thresh: float = 0.45) -> bool:
     """Check if box overlaps significantly with any box in existing_list."""
     b1 = box_dict["box"]
     for ex in existing_list:
-        b2 = ex["box"]
-        # Convert [xc, yc, w, h] to [x1, y1, x2, y2]
-        x1_1, y1_1, x2_1, y2_1 = b1[0] - b1[2]/2, b1[1] - b1[3]/2, b1[0] + b1[2]/2, b1[1] + b1[3]/2
-        x1_2, y1_2, x2_2, y2_2 = b2[0] - b2[2]/2, b2[1] - b2[3]/2, b2[0] + b2[2]/2, b2[1] + b2[3]/2
-        
-        xi1 = max(x1_1, x1_2)
-        yi1 = max(y1_1, y1_2)
-        xi2 = min(x2_1, x2_2)
-        yi2 = min(y2_1, y2_2)
-        
-        inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
-        area1 = (x2_1 - x1_1) * (y2_1 - y1_1)
-        area2 = (x2_2 - x1_2) * (y2_2 - y1_2)
-        union_area = area1 + area2 - inter_area
-        
-        if union_area > 0 and (inter_area / union_area) > iou_thresh:
+        if _calculate_iou(b1, ex["box"]) > iou_thresh:
             return True
     return False
 

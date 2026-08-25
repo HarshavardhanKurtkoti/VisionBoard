@@ -165,7 +165,20 @@ async function runDetection(overrideImagePath = null) {
   try {
     let targetPath = overrideImagePath;
     if (!targetPath) {
-      targetPath = state.customImage ? null : HITL_SCENARIOS[hitlState.currentSlot].image_url;
+      if (state.customImage) {
+        targetPath = null;
+      } else {
+        const mainImg = document.getElementById('main-image');
+        if (mainImg && mainImg.getAttribute('src')) {
+          const srcVal = mainImg.getAttribute('src');
+          if (srcVal && !srcVal.startsWith('data:')) {
+            targetPath = srcVal.replace(/^\//, '');
+          }
+        }
+        if (!targetPath && typeof SIGN_SAMPLES !== 'undefined' && SIGN_SAMPLES[currentSampleIndex]) {
+          targetPath = SIGN_SAMPLES[currentSampleIndex].image_url.replace(/^\//, '');
+        }
+      }
     }
 
     const payload = {
