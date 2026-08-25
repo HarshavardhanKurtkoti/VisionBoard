@@ -101,5 +101,7 @@ def test_setup():
     print("Diagnostics check complete.")
     print("="*50 + "\n")
 
+run_diagnostics = test_setup
+
 if __name__ == "__main__":
     test_setup()
