@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="dark-theme">
   <!-- Glow Backdrop Elements -->
@@ -39,34 +40,31 @@
             <span>Dashboard</span>
           </a>
 
-          <div class="nav-group">
-            <a href="#" class="nav-item" id="nav-projects" onclick="switchNav('projects', event)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-              <span>Projects</span>
-              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </a>
-          </div>
+          <a href="#" class="nav-item" id="nav-evaluation" onclick="switchNav('evaluation', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Evaluation</span>
+            <span class="nav-badge-glow">91.4%</span>
+          </a>
 
-          <div class="nav-group">
-            <a href="#" class="nav-item" id="nav-models" onclick="switchNav('models', event)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-              <span>Models</span>
-              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </a>
-          </div>
+          <a href="#" class="nav-item" id="nav-projects" onclick="switchNav('projects', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+            <span>Projects</span>
+          </a>
+
+          <a href="#" class="nav-item" id="nav-models" onclick="switchNav('models', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+            <span>Models</span>
+          </a>
 
           <a href="#" class="nav-item" id="nav-data" onclick="switchNav('data', event)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
-            <span>Data</span>
+            <span>Dataset</span>
           </a>
 
-          <div class="nav-group">
-            <a href="#" class="nav-item" id="nav-settings" onclick="switchNav('settings', event)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span>Settings</span>
-              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </a>
-          </div>
+          <a href="#" class="nav-item" id="nav-settings" onclick="switchNav('settings', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Diagnostics</span>
+          </a>
         </nav>
       </div>
 
@@ -344,6 +342,282 @@
               </div>
             </div>
           </aside>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW: EVALUATION METRICS ==================== -->
+      <div id="view-evaluation" class="page-view">
+        <div class="page-container glass-card">
+          <div class="page-header">
+            <div>
+              <div class="page-badge"><span class="badge-dot"></span><span>YOLOv8 Road Signs Benchmark (30 Epochs)</span></div>
+              <h2>Model Evaluation & Performance Analytics</h2>
+              <p>Quantitative verification across 877 images (233 test instances) · 4 distinct sign classes</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn-secondary" onclick="exportEvaluationReport()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export Report</span>
+              </button>
+              <button class="btn-primary" onclick="fetchEvaluationAPI()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                <span>Refresh Metrics</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero KPI Cards -->
+          <div class="eval-kpi-grid">
+            <div class="eval-kpi-card card-glow-emerald">
+              <div class="kpi-top">
+                <span class="kpi-label">Overall mAP @ 0.5</span>
+                <span class="kpi-badge badge-emerald">Primary Metric</span>
+              </div>
+              <div class="kpi-main">
+                <div class="kpi-val-group">
+                  <span class="kpi-val count-up" id="eval-map50">91.4%</span>
+                  <span class="kpi-sub">Mean Average Precision</span>
+                </div>
+                <div class="kpi-ring-box">
+                  <svg viewBox="0 0 36 36" class="circular-chart emerald">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path class="circle" stroke-dasharray="91.4, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-footer">
+                <span class="trend-up">↑ +18.4%</span>
+                <span class="kpi-note">vs baseline untrained weights</span>
+              </div>
+            </div>
+
+            <div class="eval-kpi-card card-glow-cyan">
+              <div class="kpi-top">
+                <span class="kpi-label">Macro Precision</span>
+                <span class="kpi-badge badge-cyan">Quality</span>
+              </div>
+              <div class="kpi-main">
+                <div class="kpi-val-group">
+                  <span class="kpi-val count-up" id="eval-precision">92.7%</span>
+                  <span class="kpi-sub">Low False-Alarm Rate</span>
+                </div>
+                <div class="kpi-icon-box cyan">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+              </div>
+              <div class="kpi-footer">
+                <span class="trend-neutral">100% on Stop Signs</span>
+              </div>
+            </div>
+
+            <div class="eval-kpi-card card-glow-purple">
+              <div class="kpi-top">
+                <span class="kpi-label">Macro Recall</span>
+                <span class="kpi-badge badge-purple">Coverage</span>
+              </div>
+              <div class="kpi-main">
+                <div class="kpi-val-group">
+                  <span class="kpi-val count-up" id="eval-recall">90.4%</span>
+                  <span class="kpi-sub">Detection Sensitivity</span>
+                </div>
+                <div class="kpi-icon-box purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                </div>
+              </div>
+              <div class="kpi-footer">
+                <span class="trend-up">98.7% on Speed Limits</span>
+              </div>
+            </div>
+
+            <div class="eval-kpi-card card-glow-amber">
+              <div class="kpi-top">
+                <span class="kpi-label">mAP 50-95 (Strict)</span>
+                <span class="kpi-badge badge-amber">COCO Standard</span>
+              </div>
+              <div class="kpi-main">
+                <div class="kpi-val-group">
+                  <span class="kpi-val count-up" id="eval-map5095">77.0%</span>
+                  <span class="kpi-sub">IoU 0.50:0.95 Strict Average</span>
+                </div>
+                <div class="kpi-icon-box amber">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+              </div>
+              <div class="kpi-footer">
+                <span class="trend-speed">⚡ 42.3ms (23.6 FPS CPU)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Tabs -->
+          <div class="eval-tabs-bar">
+            <button class="eval-tab-btn active" onclick="switchEvalTab('benchmarks', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 17v-4"/><path d="M12 17V7"/><path d="M17 17v-8"/></svg>
+              <span>Class Benchmarks</span>
+            </button>
+            <button class="eval-tab-btn" onclick="switchEvalTab('pr-curve', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              <span>Precision-Recall (PR) Curves</span>
+            </button>
+            <button class="eval-tab-btn" onclick="switchEvalTab('convergence', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span>Loss & Epoch Convergence</span>
+            </button>
+            <button class="eval-tab-btn" onclick="switchEvalTab('confusion', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+              <span>Confusion Matrix</span>
+            </button>
+          </div>
+
+          <!-- Tab Content 1: Class Benchmarks -->
+          <div id="eval-tab-benchmarks" class="eval-tab-panel active">
+            <div class="eval-charts-grid">
+              <div class="chart-box glass-subcard">
+                <div class="chart-header">
+                  <div>
+                    <h4>Per-Class Performance Comparison</h4>
+                    <p class="chart-subtitle">Precision, Recall, mAP@0.5, and mAP50-95 by Sign Class</p>
+                  </div>
+                  <div class="chart-legend-box" id="benchmark-legend"></div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="chart-class-benchmarks"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-box glass-subcard">
+                <div class="chart-header">
+                  <div>
+                    <h4>Class Performance Radar</h4>
+                    <p class="chart-subtitle">Multi-dimensional capability footprint across all classes</p>
+                  </div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                  <canvas id="chart-radar-performance"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 2: Precision-Recall Curve -->
+          <div id="eval-tab-pr-curve" class="eval-tab-panel">
+            <div class="chart-box glass-subcard full-width">
+              <div class="chart-header">
+                <div>
+                  <h4>Precision-Recall Curves (IoU Threshold = 0.50)</h4>
+                  <p class="chart-subtitle">Area Under Curve (AUC) demonstrates high confidence across varying detection thresholds</p>
+                </div>
+                <div class="chart-pills-row">
+                  <span class="pill-badge pill-emerald">Speed Limit: 0.995 AUC</span>
+                  <span class="pill-badge pill-rose">Stop: 0.995 AUC</span>
+                  <span class="pill-badge pill-cyan">Crosswalk: 0.921 AUC</span>
+                  <span class="pill-badge pill-amber">Traffic Light: 0.744 AUC</span>
+                </div>
+              </div>
+              <div class="chart-canvas-wrapper tall">
+                <canvas id="chart-pr-curves"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 3: Loss Convergence -->
+          <div id="eval-tab-convergence" class="eval-tab-panel">
+            <div class="chart-box glass-subcard full-width">
+              <div class="chart-header">
+                <div>
+                  <h4>Training & Validation Convergence (30 Epochs)</h4>
+                  <p class="chart-subtitle">Bounding Box Loss, Classification Loss, and mAP progression over training iterations</p>
+                </div>
+                <div class="chart-pills-row">
+                  <span class="pill-badge pill-cyan">Box Loss: 0.896 → 0.389</span>
+                  <span class="pill-badge pill-purple">Cls Loss: 2.546 → 0.198</span>
+                  <span class="pill-badge pill-emerald">mAP@0.5: 0.342 → 0.914</span>
+                </div>
+              </div>
+              <div class="chart-canvas-wrapper tall">
+                <canvas id="chart-epoch-convergence"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 4: Confusion Matrix -->
+          <div id="eval-tab-confusion" class="eval-tab-panel">
+            <div class="eval-charts-grid">
+              <div class="chart-box glass-subcard">
+                <div class="chart-header">
+                  <div>
+                    <h4>Normalized Confusion Matrix</h4>
+                    <p class="chart-subtitle">Row: Ground Truth Label · Column: Predicted Label</p>
+                  </div>
+                </div>
+                <div class="confusion-matrix-container" id="confusion-matrix-grid">
+                  <!-- Dynamically rendered confusion matrix table with glowing tiles -->
+                </div>
+              </div>
+
+              <div class="chart-box glass-subcard">
+                <div class="chart-header">
+                  <div>
+                    <h4>Error Analysis & Insights</h4>
+                    <p class="chart-subtitle">Key findings from the 877-image validation set</p>
+                  </div>
+                </div>
+                <div class="insights-list">
+                  <div class="insight-item">
+                    <div class="insight-icon icon-emerald">✓</div>
+                    <div class="insight-text">
+                      <strong>Perfect Stop Sign Detection (100% Precision)</strong>
+                      <p>Octagonal stop signs had 0 false positives and 98.9% recall, achieving a 0.995 mAP50 score.</p>
+                    </div>
+                  </div>
+                  <div class="insight-item">
+                    <div class="insight-icon icon-cyan">✓</div>
+                    <div class="insight-text">
+                      <strong>Superior Speed Limit Recognition (99.5% mAP)</strong>
+                      <p>156 speed limit instances achieved 98.8% precision with sharp numeric character boundary localization.</p>
+                    </div>
+                  </div>
+                  <div class="insight-item">
+                    <div class="insight-icon icon-amber">i</div>
+                    <div class="insight-text">
+                      <strong>Traffic Light Multi-State Occlusion (74.4% mAP)</strong>
+                      <p>Small scale instances at high distances represented the primary source of missed detections.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Ground Truth Table -->
+          <div class="eval-table-section glass-subcard">
+            <div class="table-header">
+              <div>
+                <h4>Complete Evaluation Breakdown by Sign Class</h4>
+                <p class="chart-subtitle">Standardized evaluation metrics on the 233 validation instances</p>
+              </div>
+              <span class="table-count-badge">4 Classes · 877 Images</span>
+            </div>
+            <div class="table-responsive">
+              <table class="modern-eval-table" id="eval-metrics-table">
+                <thead>
+                  <tr>
+                    <th>Sign Class</th>
+                    <th>Validation Instances</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>mAP @ 0.5</th>
+                    <th>mAP 50-95</th>
+                    <th>Overall Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="eval-table-body">
+                  <!-- Populated dynamically via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 

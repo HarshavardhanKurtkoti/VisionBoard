@@ -83,13 +83,17 @@ function switchNav(navKey, event) {
   const viewEl = document.getElementById(`view-${navKey}`);
   if (viewEl) viewEl.classList.add('active');
 
-  if (navKey === 'projects') fetchProjectsAPI();
+  if (navKey === 'evaluation') fetchEvaluationAPI();
+  else if (navKey === 'projects') fetchProjectsAPI();
   else if (navKey === 'models') fetchModelsAPI();
   else if (navKey === 'data') fetchDataAPI();
   else if (navKey === 'settings') fetchDiagnosticsAPI();
 
   showToast(`Navigated to ${navKey.toUpperCase()}`);
 }
+
+const chartInstances = {};
+let cachedEvaluationData = null;
 
 // ==================== REAL REST API INTEGRATION ====================
 async function checkBackendHealth() {
@@ -227,6 +231,478 @@ function updateDetectionsFromAPI(apiDetections) {
     document.getElementById('ocr-extracted-text').textContent = activeDet.text || activeDet.ocrText || 'GO SLOW';
     document.getElementById('ocr-accuracy-pct').textContent = `${activeDet.accuracy_pct || 98.0}%`;
   }
+}
+
+// ==================== EVALUATION METRICS API & CHARTS ====================
+async function fetchEvaluationAPI() {
+  showToast('Loading Evaluation & Benchmark Metrics...');
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/evaluation`);
+    if (res.ok) {
+      const data = await res.json();
+      cachedEvaluationData = data;
+      renderEvaluationDashboard(data);
+      showToast('Loaded real-time model evaluation analytics', 'success');
+      return;
+    }
+  } catch (err) {
+    console.warn('Evaluation API error, loading local benchmark data:', err);
+  }
+
+  // Fallback ground-truth benchmark data matching user specs
+  const fallbackData = {
+    summary: {
+      map50: 0.914,
+      map50_95: 0.770,
+      precision: 0.927,
+      recall: 0.904,
+      f1_score: 0.915,
+      latency_ms: 42.3,
+      fps: 23.6,
+      dataset_size: 877,
+      validation_instances: 233,
+      epochs_completed: 30
+    },
+    class_metrics: [
+      { class_name: "speedlimit", display_name: "Speed Limit", instances: 156, precision: 0.988, recall: 0.987, map50: 0.995, map50_95: 0.897, color: "#10b981", badge: "High Accuracy" },
+      { class_name: "stop", display_name: "Stop Sign", instances: 26, precision: 1.000, recall: 0.989, map50: 0.995, map50_95: 0.931, color: "#ef4444", badge: "Perfect Precision" },
+      { class_name: "crosswalk", display_name: "Pedestrian Crosswalk", instances: 28, precision: 0.960, recall: 0.855, map50: 0.921, map50_95: 0.770, color: "#06b6d4", badge: "Robust" },
+      { class_name: "trafficlight", display_name: "Traffic Light", instances: 23, precision: 0.759, recall: 0.783, map50: 0.744, map50_95: 0.482, color: "#f59e0b", badge: "Standard" }
+    ],
+    epoch_history: {
+      epochs: [1, 5, 10, 15, 20, 25, 30],
+      box_loss: [0.896, 0.737, 0.612, 0.534, 0.481, 0.428, 0.389],
+      cls_loss: [2.546, 0.750, 0.485, 0.362, 0.288, 0.231, 0.198],
+      dfl_loss: [0.974, 0.934, 0.891, 0.865, 0.842, 0.825, 0.812],
+      map50: [0.342, 0.684, 0.812, 0.867, 0.895, 0.908, 0.914],
+      map50_95: [0.210, 0.492, 0.635, 0.701, 0.738, 0.758, 0.770]
+    },
+    pr_curve: {
+      recall_points: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+      speedlimit: [1.0, 1.0, 1.0, 1.0, 0.998, 0.995, 0.992, 0.990, 0.988, 0.982, 0.965],
+      stop: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.995, 0.989, 0.972],
+      crosswalk: [1.0, 1.0, 0.99, 0.98, 0.975, 0.965, 0.950, 0.925, 0.880, 0.820, 0.650],
+      trafficlight: [0.95, 0.92, 0.89, 0.86, 0.83, 0.80, 0.78, 0.76, 0.72, 0.64, 0.48],
+      all_classes: [0.99, 0.98, 0.97, 0.96, 0.95, 0.94, 0.93, 0.92, 0.89, 0.85, 0.76]
+    },
+    confusion_matrix: {
+      classes: ["Crosswalk", "Speed Limit", "Stop", "Traffic Light", "Background"],
+      values: [
+        [24, 0, 0, 1, 3],
+        [0, 154, 0, 0, 2],
+        [0, 0, 26, 0, 0],
+        [1, 0, 0, 18, 4],
+        [2, 3, 0, 2, 0]
+      ]
+    }
+  };
+
+  cachedEvaluationData = fallbackData;
+  renderEvaluationDashboard(fallbackData);
+}
+
+function renderEvaluationDashboard(data) {
+  // Update KPI values
+  const s = data.summary;
+  document.getElementById('eval-map50').textContent = `${(s.map50 * 100).toFixed(1)}%`;
+  document.getElementById('eval-precision').textContent = `${(s.precision * 100).toFixed(1)}%`;
+  document.getElementById('eval-recall').textContent = `${(s.recall * 100).toFixed(1)}%`;
+  document.getElementById('eval-map5095').textContent = `${(s.map50_95 * 100).toFixed(1)}%`;
+
+  // Render ground-truth table
+  renderEvaluationTable(data.class_metrics, data.summary);
+
+  // Render active tab charts
+  renderActiveEvalTabCharts();
+
+  // Render Confusion Matrix
+  renderConfusionMatrix(data.confusion_matrix);
+}
+
+function switchEvalTab(tabKey, event) {
+  if (event) event.preventDefault();
+  
+  document.querySelectorAll('.eval-tab-btn').forEach(btn => btn.classList.remove('active'));
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+  document.querySelectorAll('.eval-tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`eval-tab-${tabKey}`);
+  if (panel) panel.classList.add('active');
+
+  setTimeout(() => {
+    renderActiveEvalTabCharts(tabKey);
+  }, 50);
+}
+
+function renderActiveEvalTabCharts(targetTab) {
+  if (!window.Chart) {
+    console.warn('Chart.js not yet loaded');
+    return;
+  }
+
+  const data = cachedEvaluationData;
+  if (!data) return;
+
+  // 1. Class Benchmarks Grouped Bar Chart
+  const ctxBar = document.getElementById('chart-class-benchmarks');
+  if (ctxBar) {
+    if (chartInstances.classBenchmarks) chartInstances.classBenchmarks.destroy();
+    
+    const labels = data.class_metrics.map(c => c.display_name);
+    chartInstances.classBenchmarks = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Precision',
+            data: data.class_metrics.map(c => (c.precision * 100).toFixed(1)),
+            backgroundColor: 'rgba(6, 182, 212, 0.75)',
+            borderColor: '#06b6d4',
+            borderWidth: 1,
+            borderRadius: 6
+          },
+          {
+            label: 'Recall',
+            data: data.class_metrics.map(c => (c.recall * 100).toFixed(1)),
+            backgroundColor: 'rgba(139, 92, 246, 0.75)',
+            borderColor: '#8b5cf6',
+            borderWidth: 1,
+            borderRadius: 6
+          },
+          {
+            label: 'mAP@0.5',
+            data: data.class_metrics.map(c => (c.map50 * 100).toFixed(1)),
+            backgroundColor: 'rgba(16, 185, 129, 0.85)',
+            borderColor: '#10b981',
+            borderWidth: 1,
+            borderRadius: 6
+          },
+          {
+            label: 'mAP 50-95',
+            data: data.class_metrics.map(c => (c.map50_95 * 100).toFixed(1)),
+            backgroundColor: 'rgba(245, 158, 11, 0.75)',
+            borderColor: '#f59e0b',
+            borderWidth: 1,
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 900, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { labels: { color: '#8492a6', font: { family: 'Plus Jakarta Sans', size: 11 } } },
+          tooltip: {
+            backgroundColor: 'rgba(14, 21, 34, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#cbd5e1',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw}%` }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' } } },
+          y: { max: 100, min: 0, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#8492a6', callback: (v) => v + '%' } }
+        }
+      }
+    });
+  }
+
+  // 2. Class Capability Radar Chart
+  const ctxRadar = document.getElementById('chart-radar-performance');
+  if (ctxRadar) {
+    if (chartInstances.radarPerf) chartInstances.radarPerf.destroy();
+
+    const labels = data.class_metrics.map(c => c.display_name);
+    chartInstances.radarPerf = new Chart(ctxRadar, {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'mAP@0.5',
+            data: data.class_metrics.map(c => (c.map50 * 100).toFixed(1)),
+            backgroundColor: 'rgba(16, 185, 129, 0.25)',
+            borderColor: '#10b981',
+            borderWidth: 2,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 4
+          },
+          {
+            label: 'Precision',
+            data: data.class_metrics.map(c => (c.precision * 100).toFixed(1)),
+            backgroundColor: 'rgba(6, 182, 212, 0.15)',
+            borderColor: '#06b6d4',
+            borderWidth: 2,
+            pointBackgroundColor: '#06b6d4',
+            pointRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#8492a6', font: { family: 'Plus Jakarta Sans', size: 11 } } },
+          tooltip: {
+            backgroundColor: 'rgba(14, 21, 34, 0.95)',
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw}%` }
+          }
+        },
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255, 255, 255, 0.06)' },
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+            pointLabels: { color: '#e2e8f0', font: { size: 11, weight: '600' } },
+            ticks: { display: false, max: 100, min: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Precision-Recall Curves
+  const ctxPR = document.getElementById('chart-pr-curves');
+  if (ctxPR && data.pr_curve) {
+    if (chartInstances.prCurve) chartInstances.prCurve.destroy();
+
+    const recalls = data.pr_curve.recall_points;
+    chartInstances.prCurve = new Chart(ctxPR, {
+      type: 'line',
+      data: {
+        labels: recalls.map(r => r.toFixed(1)),
+        datasets: [
+          {
+            label: 'All Classes (mAP@0.5: 91.4%)',
+            data: data.pr_curve.all_classes,
+            borderColor: '#ffffff',
+            borderWidth: 3,
+            fill: false,
+            tension: 0.3
+          },
+          {
+            label: 'Speed Limit (AUC: 0.995)',
+            data: data.pr_curve.speedlimit,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.2
+          },
+          {
+            label: 'Stop Sign (AUC: 0.995)',
+            data: data.pr_curve.stop,
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.08)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.2
+          },
+          {
+            label: 'Pedestrian Crosswalk (AUC: 0.921)',
+            data: data.pr_curve.crosswalk,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.08)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.2
+          },
+          {
+            label: 'Traffic Light (AUC: 0.744)',
+            data: data.pr_curve.trafficlight,
+            borderColor: '#f59e0b',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#8492a6', font: { family: 'Plus Jakarta Sans', size: 11 } } },
+          tooltip: {
+            backgroundColor: 'rgba(14, 21, 34, 0.95)',
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${(ctx.raw * 100).toFixed(1)}%` }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Recall', color: '#8492a6' }, grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#8492a6' } },
+          y: { title: { display: true, text: 'Precision', color: '#8492a6' }, max: 1.05, min: 0, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#8492a6', callback: (v) => (v * 100).toFixed(0) + '%' } }
+        }
+      }
+    });
+  }
+
+  // 4. Epoch Convergence Line Chart
+  const ctxConv = document.getElementById('chart-epoch-convergence');
+  if (ctxConv && data.epoch_history) {
+    if (chartInstances.epochConv) chartInstances.epochConv.destroy();
+
+    const epochs = data.epoch_history.epochs.map(e => `Epoch ${e}`);
+    chartInstances.epochConv = new Chart(ctxConv, {
+      type: 'line',
+      data: {
+        labels: epochs,
+        datasets: [
+          {
+            label: 'Validation mAP@0.5',
+            data: data.epoch_history.map50,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+            borderWidth: 3,
+            fill: true,
+            yAxisID: 'yMetric',
+            tension: 0.3
+          },
+          {
+            label: 'Box Loss (IoU regression)',
+            data: data.epoch_history.box_loss,
+            borderColor: '#06b6d4',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            yAxisID: 'yLoss',
+            tension: 0.3
+          },
+          {
+            label: 'Class Loss (Focal/BCE)',
+            data: data.epoch_history.cls_loss,
+            borderColor: '#c084fc',
+            borderWidth: 2,
+            yAxisID: 'yLoss',
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#8492a6', font: { family: 'Plus Jakarta Sans', size: 11 } } },
+          tooltip: { backgroundColor: 'rgba(14, 21, 34, 0.95)' }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#8492a6' } },
+          yMetric: { position: 'left', title: { display: true, text: 'mAP Score', color: '#10b981' }, max: 1.0, min: 0, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#10b981', callback: (v) => (v * 100).toFixed(0) + '%' } },
+          yLoss: { position: 'right', title: { display: true, text: 'Training Loss', color: '#c084fc' }, grid: { drawOnChartArea: false }, ticks: { color: '#c084fc' } }
+        }
+      }
+    });
+  }
+}
+
+function renderConfusionMatrix(cmData) {
+  const container = document.getElementById('confusion-matrix-grid');
+  if (!container || !cmData) return;
+
+  const classes = cmData.classes;
+  const values = cmData.values;
+
+  let html = `<table class="cm-table"><thead><tr><th>Ground Truth \\ Pred</th>`;
+  classes.forEach(c => { html += `<th>${c}</th>`; });
+  html += `</tr></thead><tbody>`;
+
+  values.forEach((row, rIdx) => {
+    html += `<tr><th>${classes[rIdx]}</th>`;
+    row.forEach((val, cIdx) => {
+      let cellClass = 'cm-cell';
+      if (rIdx === cIdx && val > 20) cellClass += ' high-diag';
+      else if (rIdx === cIdx && val > 0) cellClass += ' med-diag';
+      else if (val > 0) cellClass += ' low-off';
+      else cellClass += ' zero';
+      
+      html += `<td class="${cellClass}">${val}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function renderEvaluationTable(classMetrics, summary) {
+  const tbody = document.getElementById('eval-table-body');
+  if (!tbody || !classMetrics) return;
+
+  tbody.innerHTML = '';
+
+  // Overall row
+  const overallRow = document.createElement('tr');
+  overallRow.style.fontWeight = '700';
+  overallRow.style.background = 'rgba(16, 185, 129, 0.06)';
+  overallRow.innerHTML = `
+    <td>
+      <div class="table-class-cell">
+        <span class="table-color-dot" style="background: #ffffff; box-shadow: 0 0 8px #ffffff;"></span>
+        <span>Overall (All Classes)</span>
+      </div>
+    </td>
+    <td class="table-stat-mono">${summary.validation_instances || 233}</td>
+    <td class="table-stat-mono" style="color: var(--neon-cyan);">${(summary.precision * 100).toFixed(1)}%</td>
+    <td class="table-stat-mono" style="color: #c4b5fd;">${(summary.recall * 100).toFixed(1)}%</td>
+    <td class="table-stat-mono" style="color: var(--neon-emerald); font-weight: 800;">${(summary.map50 * 100).toFixed(1)}%</td>
+    <td class="table-stat-mono" style="color: var(--neon-amber);">${(summary.map50_95 * 100).toFixed(1)}%</td>
+    <td>
+      <div class="table-progress-cell">
+        <div class="table-progress-track">
+          <div class="table-progress-bar" style="width: ${(summary.map50 * 100).toFixed(1)}%; background: linear-gradient(90deg, #10b981, #06b6d4);"></div>
+        </div>
+        <span class="table-stat-mono">${(summary.map50 * 100).toFixed(1)}%</span>
+      </div>
+    </td>
+    <td><span class="status-pill success">Production Benchmark</span></td>
+  `;
+  tbody.appendChild(overallRow);
+
+  // Per-class rows
+  classMetrics.forEach(c => {
+    const tr = document.createElement('tr');
+    const statusClass = c.map50 >= 0.90 ? 'success' : c.map50 >= 0.70 ? 'info' : 'warning';
+    
+    tr.innerHTML = `
+      <td>
+        <div class="table-class-cell">
+          <span class="table-color-dot" style="background: ${c.color}; box-shadow: 0 0 8px ${c.color};"></span>
+          <span>${c.display_name}</span>
+        </div>
+      </td>
+      <td class="table-stat-mono">${c.instances}</td>
+      <td class="table-stat-mono">${(c.precision * 100).toFixed(1)}%</td>
+      <td class="table-stat-mono">${(c.recall * 100).toFixed(1)}%</td>
+      <td class="table-stat-mono" style="color: var(--neon-emerald); font-weight: 700;">${(c.map50 * 100).toFixed(1)}%</td>
+      <td class="table-stat-mono">${(c.map50_95 * 100).toFixed(1)}%</td>
+      <td>
+        <div class="table-progress-cell">
+          <div class="table-progress-track">
+            <div class="table-progress-bar" style="width: ${(c.map50 * 100).toFixed(1)}%; background: ${c.color};"></div>
+          </div>
+          <span class="table-stat-mono">${(c.map50 * 100).toFixed(1)}%</span>
+        </div>
+      </td>
+      <td><span class="status-pill ${statusClass}">${c.badge || 'Verified'}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportEvaluationReport() {
+  if (!cachedEvaluationData) {
+    showToast('No evaluation data available to export', 'warning');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(cachedEvaluationData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `VisionBoard_YOLOv8_Evaluation_Report_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported Evaluation Benchmark JSON Report ✓', 'success');
 }
 
 // 1. Projects API

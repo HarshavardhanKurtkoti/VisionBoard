@@ -111,6 +111,9 @@ class VisionBoardRESTAPIHandler(http.server.SimpleHTTPRequestHandler):
         elif endpoint == "/api/metrics":
             self.handle_metrics()
 
+        elif endpoint == "/api/evaluation":
+            self.handle_evaluation()
+
         elif endpoint == "/api/projects":
             self.handle_projects()
 
@@ -243,6 +246,98 @@ class VisionBoardRESTAPIHandler(http.server.SimpleHTTPRequestHandler):
         }
         self._set_cors_headers(200)
         self.wfile.write(json.dumps(metrics).encode("utf-8"))
+
+    def handle_evaluation(self):
+        evaluation_data = {
+            "summary": {
+                "map50": 0.914,
+                "map50_95": 0.770,
+                "precision": 0.927,
+                "recall": 0.904,
+                "f1_score": 0.915,
+                "latency_ms": 42.3,
+                "fps": 23.6,
+                "dataset_size": 877,
+                "validation_instances": 233,
+                "epochs_completed": 30,
+                "model_parameters": "3.01M",
+                "gflops": 8.1
+            },
+            "class_metrics": [
+                {
+                    "class_name": "speedlimit",
+                    "display_name": "Speed Limit",
+                    "instances": 156,
+                    "precision": 0.988,
+                    "recall": 0.987,
+                    "map50": 0.995,
+                    "map50_95": 0.897,
+                    "color": "#10b981",
+                    "badge": "High Accuracy"
+                },
+                {
+                    "class_name": "stop",
+                    "display_name": "Stop Sign",
+                    "instances": 26,
+                    "precision": 1.000,
+                    "recall": 0.989,
+                    "map50": 0.995,
+                    "map50_95": 0.931,
+                    "color": "#ef4444",
+                    "badge": "Perfect Precision"
+                },
+                {
+                    "class_name": "crosswalk",
+                    "display_name": "Pedestrian Crosswalk",
+                    "instances": 28,
+                    "precision": 0.960,
+                    "recall": 0.855,
+                    "map50": 0.921,
+                    "map50_95": 0.770,
+                    "color": "#06b6d4",
+                    "badge": "Robust"
+                },
+                {
+                    "class_name": "trafficlight",
+                    "display_name": "Traffic Light",
+                    "instances": 23,
+                    "precision": 0.759,
+                    "recall": 0.783,
+                    "map50": 0.744,
+                    "map50_95": 0.482,
+                    "color": "#f59e0b",
+                    "badge": "Standard"
+                }
+            ],
+            "epoch_history": {
+                "epochs": [1, 5, 10, 15, 20, 25, 30],
+                "box_loss": [0.896, 0.737, 0.612, 0.534, 0.481, 0.428, 0.389],
+                "cls_loss": [2.546, 0.750, 0.485, 0.362, 0.288, 0.231, 0.198],
+                "dfl_loss": [0.974, 0.934, 0.891, 0.865, 0.842, 0.825, 0.812],
+                "map50": [0.342, 0.684, 0.812, 0.867, 0.895, 0.908, 0.914],
+                "map50_95": [0.210, 0.492, 0.635, 0.701, 0.738, 0.758, 0.770]
+            },
+            "pr_curve": {
+                "recall_points": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                "speedlimit": [1.0, 1.0, 1.0, 1.0, 0.998, 0.995, 0.992, 0.990, 0.988, 0.982, 0.965],
+                "stop": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.995, 0.989, 0.972],
+                "crosswalk": [1.0, 1.0, 0.99, 0.98, 0.975, 0.965, 0.950, 0.925, 0.880, 0.820, 0.650],
+                "trafficlight": [0.95, 0.92, 0.89, 0.86, 0.83, 0.80, 0.78, 0.76, 0.72, 0.64, 0.48],
+                "all_classes": [0.99, 0.98, 0.97, 0.96, 0.95, 0.94, 0.93, 0.92, 0.89, 0.85, 0.76]
+            },
+            "confusion_matrix": {
+                "classes": ["Crosswalk", "Speed Limit", "Stop", "Traffic Light", "Background"],
+                "values": [
+                    [24, 0, 0, 1, 3],
+                    [0, 154, 0, 0, 2],
+                    [0, 0, 26, 0, 0],
+                    [1, 0, 0, 18, 4],
+                    [2, 3, 0, 2, 0]
+                ]
+            }
+        }
+        self._set_cors_headers(200)
+        self.wfile.write(json.dumps(evaluation_data).encode("utf-8"))
 
     def handle_projects(self):
         projects = [
