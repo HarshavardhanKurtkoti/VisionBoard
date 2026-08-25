@@ -143,6 +143,11 @@
             <span class="metric-label">Stream:</span>
             <span class="metric-val highlight-cyan" id="top-stream">32fps</span>
           </div>
+
+          <div class="metric-pill" id="backend-status-pill">
+            <span class="metric-label">API Backend:</span>
+            <span class="metric-val highlight-emerald" id="backend-status-text">Connected</span>
+          </div>
         </div>
 
         <div class="top-bar-right">
@@ -165,228 +170,251 @@
         </div>
       </header>
 
-      <!-- Center Workspace & Right Panel -->
-      <div class="workspace-split">
-        
-        <!-- Left / Center: Image Canvas & Telemetry Deck -->
-        <div class="center-stage">
-          <div class="canvas-card glass-card">
-            
-            <div class="canvas-header">
-              <div class="canvas-title">
-                <h2>Image Canvas</h2>
+      <!-- ==================== VIEW 1: DASHBOARD (DETECTION STUDIO) ==================== -->
+      <div id="view-dashboard" class="page-view active">
+        <div class="workspace-split">
+          
+          <!-- Center Stage -->
+          <div class="center-stage">
+            <div class="canvas-card glass-card">
+              <div class="canvas-header">
+                <div class="canvas-title">
+                  <h2>Image Canvas</h2>
+                </div>
+                <div class="canvas-tools">
+                  <button class="canvas-btn" title="Switch Scene" onclick="cycleScene()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+                  </button>
+                  <button class="canvas-btn" title="Upload Image" onclick="triggerUpload()">
+                    <input type="file" id="image-uploader" accept="image/*" style="display: none;" onchange="onCustomImage(event)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </button>
+                  <button class="canvas-btn" title="Fullscreen" onclick="toggleFullscreen()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="21 14 21 21 14 21"/><polyline points="3 10 3 3 10 3"/></svg>
+                  </button>
+                  <button class="canvas-btn" title="Options">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                  </button>
+                </div>
               </div>
-              <div class="canvas-tools">
-                <button class="canvas-btn" title="Switch Scene" onclick="cycleScene()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
-                </button>
-                <button class="canvas-btn" title="Upload Image" onclick="triggerUpload()">
-                  <input type="file" id="image-uploader" accept="image/*" style="display: none;" onchange="onCustomImage(event)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                </button>
-                <button class="canvas-btn" title="Fullscreen" onclick="toggleFullscreen()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><polyline points="21 14 21 21 14 21"/><polyline points="3 10 3 3 10 3"/></svg>
-                </button>
-                <button class="canvas-btn" title="Options">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                </button>
-              </div>
-            </div>
 
-            <!-- Visual Viewport Canvas -->
-            <div class="viewport-box" id="viewport-box">
-              <div class="image-wrapper" id="image-wrapper">
-                <img id="main-image" src="" alt="Signboard Detection Scene" />
-                
-                <!-- Laser Scanning Effect -->
-                <div class="scan-laser" id="scan-laser"></div>
-
-                <!-- Bounding Box Annotation Layer -->
-                <div class="bounding-layer" id="bounding-layer"></div>
+              <!-- Viewport Canvas -->
+              <div class="viewport-box" id="viewport-box">
+                <div class="image-wrapper" id="image-wrapper">
+                  <img id="main-image" src="" alt="Signboard Detection Scene" />
+                  <div class="scan-laser" id="scan-laser"></div>
+                  <div class="bounding-layer" id="bounding-layer"></div>
+                </div>
               </div>
             </div>
 
+            <!-- Bottom Telemetry Metric Cards -->
+            <div class="telemetry-bar">
+              <div class="tele-card glass-card">
+                <div class="tele-icon icon-green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+                </div>
+                <div class="tele-text">
+                  <span class="tele-label">Model</span>
+                  <span class="tele-val" id="tele-model-name">YOLOv8x</span>
+                </div>
+              </div>
+
+              <div class="tele-card glass-card">
+                <div class="tele-icon icon-cyan">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                </div>
+                <div class="tele-text">
+                  <span class="tele-label">GPU</span>
+                  <span class="tele-val">72%</span>
+                </div>
+              </div>
+
+              <div class="tele-card glass-card">
+                <div class="tele-icon icon-emerald">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </div>
+                <div class="tele-text">
+                  <span class="tele-label">Detections</span>
+                  <span class="tele-val" id="tele-detections-count">145</span>
+                </div>
+              </div>
+
+              <div class="tele-card glass-card">
+                <div class="tele-icon icon-teal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <div class="tele-text">
+                  <span class="tele-label">Accuracy</span>
+                  <span class="tele-val">94.1%</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Bottom Telemetry Metric Cards -->
-          <div class="telemetry-bar">
-            
-            <div class="tele-card glass-card">
-              <div class="tele-icon icon-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-              </div>
-              <div class="tele-text">
-                <span class="tele-label">Model</span>
-                <span class="tele-val" id="tele-model-name">YOLOv8x</span>
+          <!-- Right Panel -->
+          <aside class="right-panel glass-card">
+            <div class="panel-header">
+              <h3>Real-Time Detection</h3>
+              <button class="panel-menu-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </div>
+
+            <div class="section-block">
+              <div class="block-title">Latest Detections</div>
+              <div class="detection-stream-list" id="detection-stream-list">
+                <div class="stream-item active"><span class="stream-text">40 MPH (Speed Limit) | 5.5%</span></div>
+                <div class="stream-item"><span class="stream-text">ARSENTED | 40 MPH</span></div>
+                <div class="stream-item highlight-green"><span class="stream-text">SPEED_LIMIT · 40 MPH</span></div>
+                <div class="stream-item highlight-green"><span class="stream-text">PED_CROSSING · TURN_LEFT</span></div>
+                <div class="stream-item highlight-green"><span class="stream-text">TURN HANSING</span></div>
+                <div class="stream-item highlight-green"><span class="stream-text">TURN_LEFT</span></div>
               </div>
             </div>
 
-            <div class="tele-card glass-card">
-              <div class="tele-icon icon-cyan">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
-              </div>
-              <div class="tele-text">
-                <span class="tele-label">GPU</span>
-                <span class="tele-val">72%</span>
-              </div>
-            </div>
-
-            <div class="tele-card glass-card">
-              <div class="tele-icon icon-emerald">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-              </div>
-              <div class="tele-text">
-                <span class="tele-label">Detections</span>
-                <span class="tele-val" id="tele-detections-count">145</span>
+            <div class="section-block">
+              <div class="ocr-box-container">
+                <div class="ocr-box-header">
+                  <span class="ocr-box-title">OCR Content</span>
+                  <button class="ocr-edit-btn" title="Edit OCR" onclick="editOCRText()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                  </button>
+                </div>
+                <div class="ocr-box-body" id="ocr-extracted-text">40 MPH (Speed Limit)</div>
               </div>
             </div>
 
-            <div class="tele-card glass-card">
-              <div class="tele-icon icon-teal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-              </div>
-              <div class="tele-text">
-                <span class="tele-label">Accuracy</span>
-                <span class="tele-val">94.1%</span>
+            <div class="section-block">
+              <div class="block-title">Confidence</div>
+              <div class="meter-gauges-row">
+                <div class="semi-gauge-wrapper">
+                  <svg class="semi-gauge" viewBox="0 0 100 55">
+                    <path class="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" stroke-linecap="round"/>
+                    <path class="gauge-fill" id="gauge-arc-1" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#emeraldGradient)" stroke-width="7" stroke-dasharray="126" stroke-dashoffset="18" stroke-linecap="round"/>
+                    <defs>
+                      <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#06b6d4" />
+                        <stop offset="100%" stop-color="#10b981" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div class="needle" id="gauge-needle"></div>
+                </div>
+                <div class="gauge-stats-right">
+                  <span class="gauge-val-big" id="ocr-accuracy-pct">96.5%</span>
+                  <span class="gauge-sub">Accurate</span>
+                </div>
               </div>
             </div>
 
+            <div class="section-block">
+              <div class="class-breakdown">
+                <div class="class-row">
+                  <div class="class-row-header">
+                    <div class="class-name"><span class="class-dot dot-green"></span><span>Speed Limit</span></div>
+                    <span class="class-pct">58%</span>
+                  </div>
+                  <div class="class-bar-track"><div class="class-bar-fill bar-green" style="width: 58%;"></div></div>
+                </div>
+
+                <div class="class-row">
+                  <div class="class-row-header">
+                    <div class="class-name"><span class="class-dot dot-amber"></span><span>Warning</span></div>
+                    <span class="class-pct">24%</span>
+                  </div>
+                  <div class="class-bar-track"><div class="class-bar-fill bar-amber" style="width: 24%;"></div></div>
+                </div>
+
+                <div class="class-row">
+                  <div class="class-row-header">
+                    <div class="class-name"><span class="class-dot dot-cyan"></span><span>Information</span></div>
+                    <span class="class-pct">18%</span>
+                  </div>
+                  <div class="class-bar-track"><div class="class-bar-fill bar-cyan" style="width: 18%;"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-footer">
+              <div class="timestamp-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="ts-label">Timestamp</span>
+                <span class="ts-val" id="live-timestamp">14:32:11</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW 2: PROJECTS VIEW ==================== -->
+      <div id="view-projects" class="page-view">
+        <div class="page-container glass-card">
+          <div class="page-header">
+            <div>
+              <h2>Projects Management</h2>
+              <p>Computer vision detection & OCR projects overview</p>
+            </div>
+            <button class="btn-primary" onclick="showToast('Create Project modal opened')">+ New Project</button>
+          </div>
+          <div class="projects-grid" id="projects-grid-list">
+            <!-- Dynamically populated from /api/projects -->
           </div>
         </div>
-
-        <!-- Right Panel: Real-Time Detection & OCR Content -->
-        <aside class="right-panel glass-card">
-          
-          <div class="panel-header">
-            <h3>Real-Time Detection</h3>
-            <button class="panel-menu-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-            </button>
-          </div>
-
-          <!-- Latest Detections Stream -->
-          <div class="section-block">
-            <div class="block-title">Latest Detections</div>
-            <div class="detection-stream-list" id="detection-stream-list">
-              <div class="stream-item active">
-                <span class="stream-text">40 MPH (Speed Limit) | 5.5%</span>
-              </div>
-              <div class="stream-item">
-                <span class="stream-text">ARSENTED | 40 MPH</span>
-              </div>
-              <div class="stream-item highlight-green">
-                <span class="stream-text">SPEED_LIMIT · 40 MPH</span>
-              </div>
-              <div class="stream-item highlight-green">
-                <span class="stream-text">PED_CROSSING · TURN_LEFT</span>
-              </div>
-              <div class="stream-item highlight-green">
-                <span class="stream-text">TURN HANSING</span>
-              </div>
-              <div class="stream-item highlight-green">
-                <span class="stream-text">TURN_LEFT</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- OCR Content Card -->
-          <div class="section-block">
-            <div class="ocr-box-container">
-              <div class="ocr-box-header">
-                <span class="ocr-box-title">OCR Content</span>
-                <button class="ocr-edit-btn" title="Edit OCR" onclick="editOCRText()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                </button>
-              </div>
-              <div class="ocr-box-body" id="ocr-extracted-text">
-                40 MPH (Speed Limit)
-              </div>
-            </div>
-          </div>
-
-          <!-- Confidence Radial Meter Gauge -->
-          <div class="section-block">
-            <div class="block-title">Confidence</div>
-            <div class="meter-gauges-row">
-              <div class="semi-gauge-wrapper">
-                <svg class="semi-gauge" viewBox="0 0 100 55">
-                  <path class="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7" stroke-linecap="round"/>
-                  <path class="gauge-fill" id="gauge-arc-1" d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="url(#emeraldGradient)" stroke-width="7" stroke-dasharray="126" stroke-dashoffset="18" stroke-linecap="round"/>
-                  <defs>
-                    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stop-color="#06b6d4" />
-                      <stop offset="100%" stop-color="#10b981" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div class="needle" id="gauge-needle"></div>
-              </div>
-
-              <div class="gauge-stats-right">
-                <span class="gauge-val-big" id="ocr-accuracy-pct">96.5%</span>
-                <span class="gauge-sub">Accurate</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sign Class Distribution Breakdown -->
-          <div class="section-block">
-            <div class="class-breakdown">
-              
-              <div class="class-row">
-                <div class="class-row-header">
-                  <div class="class-name">
-                    <span class="class-dot dot-green"></span>
-                    <span>Speed Limit</span>
-                  </div>
-                  <span class="class-pct">58%</span>
-                </div>
-                <div class="class-bar-track">
-                  <div class="class-bar-fill bar-green" style="width: 58%;"></div>
-                </div>
-              </div>
-
-              <div class="class-row">
-                <div class="class-row-header">
-                  <div class="class-name">
-                    <span class="class-dot dot-amber"></span>
-                    <span>Warning</span>
-                  </div>
-                  <span class="class-pct">24%</span>
-                </div>
-                <div class="class-bar-track">
-                  <div class="class-bar-fill bar-amber" style="width: 24%;"></div>
-                </div>
-              </div>
-
-              <div class="class-row">
-                <div class="class-row-header">
-                  <div class="class-name">
-                    <span class="class-dot dot-cyan"></span>
-                    <span>Information</span>
-                  </div>
-                  <span class="class-pct">18%</span>
-                </div>
-                <div class="class-bar-track">
-                  <div class="class-bar-fill bar-cyan" style="width: 18%;"></div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Timestamp Footer -->
-          <div class="panel-footer">
-            <div class="timestamp-box">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span class="ts-label">Timestamp</span>
-              <span class="ts-val" id="live-timestamp">14:32:11</span>
-            </div>
-          </div>
-
-        </aside>
-
       </div>
+
+      <!-- ==================== VIEW 3: MODELS VIEW ==================== -->
+      <div id="view-models" class="page-view">
+        <div class="page-container glass-card">
+          <div class="page-header">
+            <div>
+              <h2>Model Checkpoints & Benchmark Matrix</h2>
+              <p>Compare accuracy, size, and latency across YOLOv8 architectures</p>
+            </div>
+            <button class="btn-secondary" onclick="showToast('Downloading model weights package...')">Download All Weights</button>
+          </div>
+          <div class="models-grid" id="models-grid-list">
+            <!-- Dynamically populated from /api/models -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW 4: DATA VIEW ==================== -->
+      <div id="view-data" class="page-view">
+        <div class="page-container glass-card">
+          <div class="page-header">
+            <div>
+              <h2>Dataset Explorer</h2>
+              <p>Manage training splits, annotations, and synthetic sample generation</p>
+            </div>
+            <button class="btn-primary" onclick="triggerDatasetGeneration()">Generate Synthetic Samples</button>
+          </div>
+          <div class="data-stats-row" id="data-stats-row">
+            <!-- Dynamically populated from /api/data -->
+          </div>
+          <div class="data-samples-grid" id="data-samples-grid">
+            <!-- Sample Thumbnails -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW 5: SETTINGS VIEW ==================== -->
+      <div id="view-settings" class="page-view">
+        <div class="page-container glass-card">
+          <div class="page-header">
+            <div>
+              <h2>System Diagnostics & Backend API Settings</h2>
+              <p>Live REST API endpoint check, Python environment, and OCR configuration</p>
+            </div>
+            <button class="btn-primary" onclick="fetchDiagnosticsAPI()">Run Full System Check</button>
+          </div>
+          
+          <div class="settings-content" id="settings-report-box">
+            <!-- Dynamically populated from /api/diagnostics -->
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Global Toast Notification -->

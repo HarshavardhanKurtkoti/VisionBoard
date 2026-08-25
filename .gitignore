@@ -174,3 +174,5 @@ cython_debug/
 VisionBoard_Data
 docs/
 Artifacts/
+data/
+datasets/roadsigns/
