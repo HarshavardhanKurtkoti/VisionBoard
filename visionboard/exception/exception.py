@@ -1,8 +1,8 @@
 import os
 import sys
-from typing import Optional
+from typing import Optional, Any
 
-def error_message_detail(error: Exception, error_detail: sys) -> str:
+def error_message_detail(error: Exception, error_detail: Optional[Any] = sys) -> str:
     """
     Generate detailed error message including file name and line number
     Args:
@@ -11,7 +11,7 @@ def error_message_detail(error: Exception, error_detail: sys) -> str:
     Returns:
         str: Formatted error message
     """
-    exc_info = error_detail.exc_info() if error_detail is not None else sys.exc_info()
+    exc_info = error_detail.exc_info() if error_detail is not None and hasattr(error_detail, "exc_info") else sys.exc_info()
     if exc_info is not None and len(exc_info) == 3 and exc_info[2] is not None:
         exc_tb = exc_info[2]
         file_name = exc_tb.tb_frame.f_code.co_filename
@@ -27,7 +27,7 @@ class VisionBoardException(Exception):
         error_message: Detailed error message
     """
     
-    def __init__(self, error: Exception, error_detail: Optional[sys] = sys):
+    def __init__(self, error: Exception, error_detail: Optional[Any] = sys):
         """
         Initialize VisionBoardException with error details
         Args:
