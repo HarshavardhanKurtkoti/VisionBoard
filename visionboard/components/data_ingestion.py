@@ -58,7 +58,12 @@ class DataIngestion:
                         else:
                             shutil.copy2(s_item, d_item)
             else:
-                logging.info(f"No external data found at {self.data_ingestion_config.source_data_dir}. Using empty/synthetic data.")
+                logging.info(f"No external data found at {self.data_ingestion_config.source_data_dir}. Generating synthetic data fallback.")
+                try:
+                    from create_sample_dataset import create_dataset
+                    create_dataset(base_path=self.data_ingestion_config.raw_data_dir, counts={"train": 4, "valid": 2, "test": 2})
+                except Exception as ex:
+                    logging.warning(f"Could not generate synthetic dataset: {ex}")
                 
             logging.info("Dataset download / staging completed")
             

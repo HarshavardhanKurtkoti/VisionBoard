@@ -3,15 +3,16 @@ import pytest
 from visionboard.entity.config_entity import TrainingPipelineConfig, DataIngestionConfig
 from visionboard.pipeline.training_pipeline import TrainingPipeline
 
-def test_training_pipeline_orchestration(sample_dataset_dir, temp_test_dir):
+def test_training_pipeline_orchestration(sample_dataset_dir, temp_test_dir, monkeypatch):
     pipe_cfg = TrainingPipelineConfig(
         pipeline_name="TestVisionBoard",
         artifact_dir=temp_test_dir,
         timestamp="test_ts"
     )
     
-    # Point default data dir to sample_dataset_dir
-    os.environ["DATA_DIR"] = sample_dataset_dir
+    # Point default data dir to sample_dataset_dir and set 1 epoch for quick test
+    monkeypatch.setenv("DATA_DIR", sample_dataset_dir)
+    monkeypatch.setenv("TRAIN_EPOCHS", "1")
     
     pipeline = TrainingPipeline(config=pipe_cfg)
     

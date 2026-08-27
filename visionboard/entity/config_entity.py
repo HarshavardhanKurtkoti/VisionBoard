@@ -74,6 +74,9 @@ class DataIngestionConfig:
     test_dir: str = field(init=False)
 
     def __post_init__(self):
+        env_data_dir = os.getenv("DATA_DIR")
+        if env_data_dir:
+            self.source_data_dir = env_data_dir
         base_dir = (
             self.training_pipeline_config.artifact_dir
             if self.training_pipeline_config
@@ -154,6 +157,12 @@ class ModelTrainerConfig:
     model_acceptance_threshold: float = 0.20
 
     def __post_init__(self):
+        env_epochs = os.getenv("TRAIN_EPOCHS")
+        if env_epochs:
+            try:
+                self.epochs = int(env_epochs)
+            except ValueError:
+                pass
         base_dir = (
             self.training_pipeline_config.artifact_dir
             if self.training_pipeline_config
