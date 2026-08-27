@@ -1,31 +1,97 @@
-name: VisionBoard CI
+name: VisionBoard - AI Detection & Smart CI/CD Deployment
 
 on:
   push:
     branches: [ main, master, develop ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  PYTHONPATH: .
+  PYTHONUNBUFFERED: "1"
 
 jobs:
-  test:
+  detect-changes:
+    name: 🔍 Detect Changed Components
     runs-on: ubuntu-latest
+    outputs:
+      core_engine: ${{ steps.filter.outputs.core_engine }}
+      ui_dashboard: ${{ steps.filter.outputs.ui_dashboard }}
+      test_suite: ${{ steps.filter.outputs.test_suite }}
+      dependencies: ${{ steps.filter.outputs.dependencies }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Filter Changed Paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core_engine:
+              - 'visionboard/**'
+              - 'app.py'
+              - 'main.py'
+              - 'detect_and_read.py'
+              - 'train_model.py'
+              - 'train_signboard_model.py'
+              - 'prepare_dataset.py'
+              - 'create_sample_dataset.py'
+              - 'config/**'
+            ui_dashboard:
+              - 'ui/**'
+            test_suite:
+              - 'tests/**'
+              - 'test_setup.py'
+            dependencies:
+              - 'requirements.txt'
+              - 'setup.py'
+              - 'Dockerfile'
+              - 'render.yaml'
+              - 'runtime.txt'
+              - '.python-version'
+            workflows:
+              - '.github/workflows/**'
+
+  fast-checks:
+    name: ⚡ Fast Unit & Quality Gates
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.core_engine == 'true' ||
+      needs.detect-changes.outputs.ui_dashboard == 'true' ||
+      needs.detect-changes.outputs.test_suite == 'true' ||
+      needs.detect-changes.outputs.dependencies == 'true' ||
+      needs.detect-changes.outputs.workflows == 'true' ||
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/master' ||
+      github.event_name == 'workflow_dispatch'
+
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
 
-      - name: Install System Dependencies (OpenCV & Tesseract)
+      - name: Install System Dependencies (OpenCV & Tesseract OCR)
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libglib2.0-0 tesseract-ocr tesseract-ocr-eng
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 \
+            libglib2.0-0 \
+            tesseract-ocr \
+            tesseract-ocr-eng
 
       - name: Install Python Dependencies
         run: |
@@ -33,13 +99,52 @@ jobs:
           pip install -r requirements.txt
           pip install flake8 pytest pytest-cov
 
-      - name: Lint with Flake8
+      - name: Run Environment & Model Diagnostics
+        run: |
+          python test_setup.py
+
+      - name: Lint Code Quality with Flake8
         run: |
           # Stop the build if there are Python syntax errors or undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          # Exit-zero treats formatting/complexity warnings without breaking build
+          flake8 . --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
 
-      - name: Run Pytest Test Suite
+      - name: Run Pytest Unit & Integration Suite with Coverage
         run: |
           pytest -v --cov=visionboard tests/
+
+  deploy-render:
+    name: 🚀 Deploy VisionBoard Web Platform to Render
+    runs-on: ubuntu-latest
+    needs: [detect-changes, fast-checks]
+    if: |
+      always() && 
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 
+      (needs.detect-changes.outputs.core_engine == 'true' || 
+       needs.detect-changes.outputs.ui_dashboard == 'true' || 
+       needs.detect-changes.outputs.dependencies == 'true' || 
+       github.event_name == 'push') &&
+      (needs.fast-checks.result == 'success' || needs.fast-checks.result == 'skipped')
+    steps:
+      - name: Inspect Change Type
+        run: |
+          if [ "${{ needs.detect-changes.outputs.dependencies }}" = "true" ]; then
+            echo "📦 Dependency / Dockerfile changes detected -> Full container rebuild triggered on Render."
+          elif [ "${{ needs.detect-changes.outputs.ui_dashboard }}" = "true" ]; then
+            echo "🎨 UI Dashboard changes detected -> Static & frontend asset update on Render."
+          else
+            echo "⚡ Core VisionBoard code changes detected -> Live service update triggered on Render."
+          fi
+
+      - name: Trigger Render Deploy Hook
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "Triggering Render webhook deploy..."
+            curl -f -sS -X GET "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo ""
+            echo "✅ Render deployment successfully triggered."
+          else
+            echo "⚠️  WARNING: RENDER_DEPLOY_HOOK_URL secret is not configured in GitHub repository secrets."
+            echo "ℹ️  To enable automatic deploys: Add 'RENDER_DEPLOY_HOOK_URL' to Settings -> Secrets and variables -> Actions."
+          fi

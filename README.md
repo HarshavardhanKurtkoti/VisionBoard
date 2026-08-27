@@ -118,7 +118,8 @@ VisionBoard/
 ├── test_setup.py            # Environment & hardware diagnostics
 ├── main.py                  # Production CLI entry point
 ├── requirements.txt         # Project dependencies
-├── DOCKERFILE               # Production container image
+├── Dockerfile               # Production container image
+├── render.yaml              # Render Deployment Blueprint
 └── README.md
 ```
 
